@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "UnityMCP": {
+      "command": "C:/Users/User/Documents/GitHub/FakeSoldier/FakeSoldier/Assets/StreamingAssets/realvirtual-MCP/python/python.exe",
+      "args": [
+        "C:/Users/User/Documents/GitHub/FakeSoldier/FakeSoldier/Assets/StreamingAssets/realvirtual-MCP/unity_mcp_server.py"
+      ]
+    }
+  }
+}

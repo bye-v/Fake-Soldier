@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
@@ -7,6 +8,42 @@ using TMPro;
 
 public static class SceneSetupHelper
 {
+    // ── EventSystem 추가 ──────────────────────────────────────────
+
+    static void EnsureEventSystem(Scene scene)
+    {
+        foreach (var root in scene.GetRootGameObjects())
+            if (root.GetComponent<EventSystem>() != null) return;
+
+        var esGO = new GameObject("EventSystem");
+        SceneManager.MoveGameObjectToScene(esGO, scene);
+        esGO.AddComponent<EventSystem>();
+        esGO.AddComponent<StandaloneInputModule>();
+    }
+
+    // ── 모든 씬에 EventSystem 일괄 추가 ──────────────────────────
+
+    [MenuItem("FakeSoldier/Fix All Scenes (Add EventSystem)")]
+    public static void FixAllScenes()
+    {
+        string[] scenePaths = {
+            "Assets/Scenes/MainMenu.unity",
+            "Assets/Scenes/Stage_01.unity","Assets/Scenes/Stage_02.unity",
+            "Assets/Scenes/Stage_03.unity","Assets/Scenes/Stage_04.unity",
+            "Assets/Scenes/Stage_05.unity",
+            "Assets/Scenes/Ending_Bad.unity","Assets/Scenes/Ending_Normal.unity",
+            "Assets/Scenes/Ending_True.unity","Assets/Scenes/Credit.unity"
+        };
+        foreach (var path in scenePaths)
+        {
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            EnsureEventSystem(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+        Debug.Log("모든 씬 EventSystem 추가 완료!");
+    }
+
     // ── 공통 헬퍼 ─────────────────────────────────────────────────
 
     static RectTransform MakeRect(string name, Transform parent, Vector2 anchor, Vector2 pos, Vector2 size)
@@ -158,6 +195,7 @@ public static class SceneSetupHelper
         typeof(MainMenuController).GetField("quitButton",     bf)?.SetValue(mmc, quitBtn);
         typeof(MainMenuController).GetField("settingsPanel",  bf)?.SetValue(mmc, spRT.gameObject);
 
+        EnsureEventSystem(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log("MainMenu 씬 구성 완료!");
@@ -226,6 +264,7 @@ public static class SceneSetupHelper
         var dirGO = new GameObject("StageDirector");
         dirGO.AddComponent(directorType);
 
+        EnsureEventSystem(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
     }
@@ -406,6 +445,7 @@ public static class SceneSetupHelper
         // titleText를 올바른 오브젝트로 덮어쓰기
         typeof(EndingController).GetField("titleText", bf)?.SetValue(ec, MakeTMP(ct, new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(900, 100), title, 60, new Color(0.85f, 0.2f, 0.2f), FontStyles.Bold));
 
+        EnsureEventSystem(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"{title} 엔딩 씬 구성 완료!");
@@ -467,6 +507,7 @@ public static class SceneSetupHelper
         typeof(CreditController).GetField("creditContent", bf)?.SetValue(cc, scrollRT);
         typeof(CreditController).GetField("skipButton",    bf)?.SetValue(cc, skipBtn);
 
+        EnsureEventSystem(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log("Credit 씬 구성 완료!");

@@ -198,9 +198,7 @@ public static class PlayerSetupHelper
 
     static void SaveSprite(Texture2D tex, string name)
     {
-        var path = $"{SPRITE_FOLDER}/{name}.png";
         File.WriteAllBytes(Application.dataPath + $"/Sprites/Player/{name}.png", tex.EncodeToPNG());
-        Object.DestroyImmediate(tex);
     }
 
     // ── AnimatorController 생성 ────────────────────────────────────
@@ -408,6 +406,33 @@ public static class PlayerSetupHelper
         foreach (var root in scene.GetRootGameObjects())
             if (root.name == "EventTriggerZone") { Object.DestroyImmediate(root); break; }
 
+        // 마커 스프라이트 에셋 생성 (최초 1회만)
+        const string markerAssetPath = "Assets/Sprites/marker_red.png";
+        if (!File.Exists(Application.dataPath + "/Sprites/marker_red.png"))
+        {
+            Directory.CreateDirectory(Application.dataPath + "/Sprites");
+            var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var c = new Color(1f, 0.2f, 0.2f, 0.9f);
+            var clr = Color.clear;
+            tex.SetPixels(new Color[] { clr,c,c,clr, clr,c,c,clr, clr,c,c,clr, clr,c,c,clr });
+            tex.Apply();
+            File.WriteAllBytes(Application.dataPath + "/Sprites/marker_red.png", tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.Refresh();
+
+            var importer = AssetImporter.GetAtPath(markerAssetPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.filterMode = FilterMode.Point;
+                importer.SaveAndReimport();
+            }
+        }
+
+        var markerSprite = AssetDatabase.LoadAssetAtPath<Sprite>(markerAssetPath);
+
         // 이벤트 존 (화면 중앙 우측)
         var zoneGO = new GameObject("EventTriggerZone");
         SceneManager.MoveGameObjectToScene(zoneGO, scene);
@@ -419,28 +444,13 @@ public static class PlayerSetupHelper
         col.size = new Vector2(2f, 2f);
         zoneGO.AddComponent<EventTriggerZone>();
 
-        // 시각적 마커 (작은 반투명 원형)
+        // 시각적 마커
         var marker = new GameObject("Marker");
         marker.transform.SetParent(zoneGO.transform, false);
         var markerSR = marker.AddComponent<SpriteRenderer>();
         markerSR.color = new Color(0.9f, 0.2f, 0.2f, 0.35f);
         markerSR.sortingOrder = 2;
-
-        // 느낌표 텍스처 (4x4 픽셀)
-        var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-        var c = new Color(1f, 0.2f, 0.2f, 0.9f);
-        var clr = Color.clear;
-        tex.SetPixels(new Color[]
-        {
-            clr,c,c,clr,
-            clr,c,c,clr,
-            clr,c,c,clr,
-            clr,c,c,clr,
-        });
-        tex.Apply();
-        var markerSprite = Sprite.Create(tex, new Rect(0,0,4,4), new Vector2(0.5f,0.5f), 16);
-        markerSR.sprite = markerSprite;
+        if (markerSprite != null) markerSR.sprite = markerSprite;
         marker.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
     }
 }

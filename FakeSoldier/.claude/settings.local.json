@@ -12,7 +12,10 @@
       "mcp__UnityMCP__manage_build",
       "Bash(Get-ChildItem -Path Assets -Recurse -Directory)",
       "Bash(Select-Object FullName)",
-      "Bash(grep -E \"\\\\.\\(png|anim|controller\\)$\")"
+      "Bash(grep -E \"\\\\.\\(png|anim|controller\\)$\")",
+      "mcp__UnityMCP__manage_asset",
+      "Bash(Copy-Item \"C:\\\\Windows\\\\Fonts\\\\malgun.ttf\" \"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\FakeSoldier\\\\FakeSoldier\\\\Assets\\\\Fonts\\\\malgun.ttf\" -Force)",
+      "Bash(Write-Output \"복사 완료\")"
     ]
   },
   "enableAllProjectMcpServers": true,

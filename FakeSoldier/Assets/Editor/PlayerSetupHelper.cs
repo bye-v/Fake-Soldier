@@ -11,6 +11,206 @@ public static class PlayerSetupHelper
     const string ANIM_FOLDER    = "Assets/Animations/Player";
     const string CTRL_PATH      = "Assets/Animations/Player/PlayerController.controller";
 
+    // ── SMS Soldier 스프라이트 슬라이싱 + 애니메이터 ─────────────────
+
+    [MenuItem("FakeSoldier/Setup SMS Player (Sprites + Animator)")]
+    public static void SetupSMSPlayer()
+    {
+        SliceSMSSprites();
+        CreateSMSAnimator();
+        ApplySMSPlayerToStages();
+        Debug.Log("SMS 플레이어 설정 완료!");
+    }
+
+    static readonly string[] SMS_SPRITES = {
+        "SMS_Soldier_SOUTH_strip4",      // idle down
+        "SMS_Soldier_IDLE_NORTH_strip4", // idle up
+        "SMS_Soldier_IDLE_EAST_strip4",  // idle right
+        "SMS_Soldier_IDLE_WEST_strip4",  // idle left
+        "SMS_Soldier_WALK_SOUTH_strip4", // walk down
+        "SMS_Soldier_WALK_NORTH_strip4", // walk up
+        "SMS_Soldier_WALK_EAST_strip4",  // walk right
+        "SMS_Soldier_WALK_WEST_strip4",  // walk left
+    };
+
+    static void SliceSMSSprites()
+    {
+        foreach (var name in SMS_SPRITES)
+        {
+            var path = $"{SPRITE_FOLDER}/{name}.png";
+            if (!File.Exists(Application.dataPath.Replace("Assets", "") + path)) continue;
+
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) continue;
+
+            // 일단 Texture로 로드해 실제 크기 파악
+            importer.textureType = TextureImporterType.Default;
+            importer.isReadable  = true;
+            importer.SaveAndReimport();
+
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex == null) continue;
+            int fw = tex.width / 4;
+            int fh = tex.height;
+
+            // Multiple 슬라이스
+            importer.textureType     = TextureImporterType.Sprite;
+            importer.spriteImportMode= SpriteImportMode.Multiple;
+            importer.filterMode      = FilterMode.Point;
+            importer.spritePixelsPerUnit = 16;
+
+            var metas = new SpriteMetaData[4];
+            for (int i = 0; i < 4; i++)
+                metas[i] = new SpriteMetaData
+                {
+                    name      = $"{name}_{i}",
+                    rect      = new Rect(i * fw, 0, fw, fh),
+                    pivot     = new Vector2(0.5f, 0.5f),
+                    alignment = (int)SpriteAlignment.Center
+                };
+            importer.spritesheet = metas;
+            importer.SaveAndReimport();
+        }
+        AssetDatabase.Refresh();
+        Debug.Log("SMS 스프라이트 슬라이싱 완료");
+    }
+
+    // 슬라이스된 스프라이트 서브에셋 이름으로 로드
+    static Sprite LoadSlicedSprite(string pngName, int index)
+    {
+        var allAssets = AssetDatabase.LoadAllAssetsAtPath($"{SPRITE_FOLDER}/{pngName}.png");
+        var targetName = $"{pngName}_{index}";
+        foreach (var a in allAssets)
+            if (a is Sprite s && s.name == targetName) return s;
+        return null;
+    }
+
+    static AnimatorController CreateSMSAnimator()
+    {
+        Directory.CreateDirectory(Application.dataPath + "/Animations/Player");
+        AssetDatabase.Refresh();
+
+        const string SMS_CTRL = "Assets/Animations/Player/PlayerController.controller";
+
+        // 기존 컨트롤러 삭제 후 재생성
+        if (File.Exists(Application.dataPath.Replace("Assets","") + SMS_CTRL))
+            AssetDatabase.MoveAssetToTrash(SMS_CTRL);
+
+        AnimationClip MakeClip(string clipName, string spriteName, int frameCount = 4, float fps = 8)
+        {
+            var clip = new AnimationClip();
+            clip.frameRate = fps;
+            var binding = new EditorCurveBinding
+            {
+                path = "", type = typeof(SpriteRenderer), propertyName = "m_Sprite"
+            };
+            var kf = new ObjectReferenceKeyframe[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                kf[i].time  = i / fps;
+                kf[i].value = LoadSlicedSprite(spriteName, i);
+            }
+            AnimationUtility.SetObjectReferenceCurve(clip, binding, kf);
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+
+            var animPath = $"{ANIM_FOLDER}/{clipName}.anim";
+            if (File.Exists(Application.dataPath.Replace("Assets","") + animPath))
+                AssetDatabase.MoveAssetToTrash(animPath);
+            AssetDatabase.CreateAsset(clip, animPath);
+            return clip;
+        }
+
+        // 클립 생성
+        var idleDown  = MakeClip("sms_idle_down",  "SMS_Soldier_SOUTH_strip4");
+        var idleUp    = MakeClip("sms_idle_up",    "SMS_Soldier_IDLE_NORTH_strip4");
+        var idleRight = MakeClip("sms_idle_right", "SMS_Soldier_IDLE_EAST_strip4");
+        var idleLeft  = MakeClip("sms_idle_left",  "SMS_Soldier_IDLE_WEST_strip4");
+        var walkDown  = MakeClip("sms_walk_down",  "SMS_Soldier_WALK_SOUTH_strip4");
+        var walkUp    = MakeClip("sms_walk_up",    "SMS_Soldier_WALK_NORTH_strip4");
+        var walkRight = MakeClip("sms_walk_right", "SMS_Soldier_WALK_EAST_strip4");
+        var walkLeft  = MakeClip("sms_walk_left",  "SMS_Soldier_WALK_WEST_strip4");
+
+        var ctrl = AnimatorController.CreateAnimatorControllerAtPath(SMS_CTRL);
+        ctrl.AddParameter("MoveX",    AnimatorControllerParameterType.Float);
+        ctrl.AddParameter("MoveY",    AnimatorControllerParameterType.Float);
+        ctrl.AddParameter("IsMoving", AnimatorControllerParameterType.Bool);
+
+        var sm = ctrl.layers[0].stateMachine;
+        var idleState = sm.AddState("Idle");
+        var walkState = sm.AddState("Walk");
+        sm.defaultState = idleState;
+
+        BlendTree MakeBlend(string bname, (AnimationClip clip, Vector2 dir)[] entries)
+        {
+            var tree = new BlendTree();
+            tree.name = bname;
+            tree.blendType = BlendTreeType.SimpleDirectional2D;
+            tree.blendParameter  = "MoveX";
+            tree.blendParameterY = "MoveY";
+            foreach (var e in entries) tree.AddChild(e.clip, e.dir);
+            AssetDatabase.AddObjectToAsset(tree, ctrl);
+            return tree;
+        }
+
+        idleState.motion = MakeBlend("IdleBlend", new (AnimationClip, Vector2)[] {
+            (idleDown,  new Vector2( 0, -1)),
+            (idleUp,    new Vector2( 0,  1)),
+            (idleRight, new Vector2( 1,  0)),
+            (idleLeft,  new Vector2(-1,  0)),
+        });
+        walkState.motion = MakeBlend("WalkBlend", new (AnimationClip, Vector2)[] {
+            (walkDown,  new Vector2( 0, -1)),
+            (walkUp,    new Vector2( 0,  1)),
+            (walkRight, new Vector2( 1,  0)),
+            (walkLeft,  new Vector2(-1,  0)),
+        });
+
+        var toWalk = idleState.AddTransition(walkState);
+        toWalk.AddCondition(AnimatorConditionMode.If, 0, "IsMoving");
+        toWalk.hasExitTime = false; toWalk.duration = 0;
+
+        var toIdle = walkState.AddTransition(idleState);
+        toIdle.AddCondition(AnimatorConditionMode.IfNot, 0, "IsMoving");
+        toIdle.hasExitTime = false; toIdle.duration = 0;
+
+        AssetDatabase.SaveAssets();
+        Debug.Log("SMS 애니메이터 생성 완료");
+        return ctrl;
+    }
+
+    static void ApplySMSPlayerToStages()
+    {
+        var ctrl = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(CTRL_PATH);
+        var idleSprite = LoadSlicedSprite("SMS_Soldier_SOUTH_strip4", 0);
+
+        string[] stages = { "Stage_01","Stage_02","Stage_03","Stage_04","Stage_05" };
+        foreach (var stageName in stages)
+        {
+            var path = $"Assets/Scenes/{stageName}.unity";
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                if (root.name != "Player") continue;
+                var sr = root.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    if (idleSprite != null) sr.sprite = idleSprite;
+                    sr.color = Color.white;
+                    sr.flipX = false;
+                }
+                root.transform.localScale = new Vector3(2f, 2f, 1f);
+                var anim = root.GetComponent<Animator>();
+                if (anim == null) anim = root.AddComponent<Animator>();
+                if (ctrl != null) anim.runtimeAnimatorController = ctrl;
+            }
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+    }
+
     // ── 픽셀아트 솔저 스프라이트 생성 ─────────────────────────────
 
     [MenuItem("FakeSoldier/Generate Player Sprites")]

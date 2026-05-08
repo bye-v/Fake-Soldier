@@ -4,6 +4,8 @@ using UnityEngine;
 
 public abstract class StageDirector : MonoBehaviour
 {
+    [SerializeField] protected AudioClip stageBGM;
+
     protected PlayerController player;
     protected EventTriggerZone eventZone;
 
@@ -12,6 +14,8 @@ public abstract class StageDirector : MonoBehaviour
         player = FindFirstObjectByType<PlayerController>();
         eventZone = FindFirstObjectByType<EventTriggerZone>();
         if (player) player.SetCanMove(false);
+        if (stageBGM != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlayBGM(stageBGM);
         StartCoroutine(RunStage());
     }
 
@@ -36,11 +40,7 @@ public abstract class StageDirector : MonoBehaviour
     {
         if (eventZone == null) { yield return new WaitForSeconds(2f); yield break; }
         bool triggered = false;
-        eventZone.GetComponent<UnityEngine.Events.UnityEvent>();
-        // EventTriggerZone 이벤트 리스너로 감지
-        var zoneTrigger = eventZone.GetComponent<EventTriggerZone>();
-        if (zoneTrigger != null)
-            zoneTrigger.onPlayerEnterCallback = () => triggered = true;
+        eventZone.onPlayerEnterCallback = () => triggered = true;
         yield return new WaitUntil(() => triggered);
     }
 
@@ -49,6 +49,19 @@ public abstract class StageDirector : MonoBehaviour
     protected void AllowMove() { if (player) player.SetCanMove(true); }
     protected void LockMove()  { if (player) player.SetCanMove(false); }
 
-    protected void NextScene(string sceneName) => GameManager.Instance.LoadScene(sceneName);
-    protected void GoEnding() => GameManager.Instance.LoadEnding();
+    protected void NextScene(string sceneName)
+    {
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeToScene(sceneName);
+        else
+            GameManager.Instance.LoadScene(sceneName);
+    }
+
+    protected void GoEnding()
+    {
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeToScene(null, () => GameManager.Instance.LoadEnding());
+        else
+            GameManager.Instance.LoadEnding();
+    }
 }

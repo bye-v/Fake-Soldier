@@ -14,13 +14,13 @@ public class PlayerController : MonoBehaviour
     static readonly int HashMoveY  = Animator.StringToHash("MoveY");
     static readonly int HashMoving = Animator.StringToHash("IsMoving");
 
-    SpriteRenderer sr;
+    // 마지막 이동 방향 기억 (Idle 블렌드트리용)
+    Vector2 lastMoveDir = Vector2.down;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        sr = GetComponent<SpriteRenderer>();
         rb.gravityScale = 0;
         rb.freezeRotation = true;
     }
@@ -35,13 +35,13 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = moveInput * moveSpeed;
 
-        // 좌우 방향에 따라 스프라이트 뒤집기
-        if (sr != null && Mathf.Abs(moveInput.x) > 0.1f)
-            sr.flipX = moveInput.x < 0;
+        if (moveInput != Vector2.zero) lastMoveDir = moveInput;
 
         if (animator == null) return;
-        animator.SetFloat(HashMoveX, moveInput.x);
-        animator.SetFloat(HashMoveY, moveInput.y);
+        // 이동 중이면 현재 방향, 정지 중이면 마지막 방향 유지
+        var dir = moveInput != Vector2.zero ? moveInput : lastMoveDir;
+        animator.SetFloat(HashMoveX, dir.x);
+        animator.SetFloat(HashMoveY, dir.y);
         animator.SetBool(HashMoving, moveInput != Vector2.zero);
     }
 

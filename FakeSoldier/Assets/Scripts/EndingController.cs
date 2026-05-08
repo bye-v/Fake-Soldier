@@ -23,11 +23,16 @@ public class EndingController : MonoBehaviour
     [SerializeField] TMP_Text victimCountText;
     [SerializeField] int      victimCount = 166;
 
+    [Header("Audio")]
+    [SerializeField] AudioClip endingBGM;
+
     void Start()
     {
-        // GameManager가 있으면 엔딩 타입을 자동 판별
         if (GameManager.Instance != null)
             endingType = GameManager.Instance.GetEnding();
+
+        if (endingBGM != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlayBGM(endingBGM);
 
         SetupUI();
 

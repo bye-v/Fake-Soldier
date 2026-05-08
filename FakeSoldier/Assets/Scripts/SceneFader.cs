@@ -26,7 +26,7 @@ public class SceneFader : MonoBehaviour
     {
         yield return FadeOut();
         onMidpoint?.Invoke();
-        GameManager.Instance.LoadScene(sceneName);
+        if (sceneName != null) GameManager.Instance.LoadScene(sceneName);
         yield return FadeIn();
     }
 

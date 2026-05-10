@@ -8,13 +8,22 @@ public static class FixAllStagesHelper
 {
     const float WALL_TOP_Y    = -1.72f;
     const float WALL_BOTTOM_Y = -4.58f;
-    const float WALL_LEFT_X   = -11.0f;
-    const float WALL_RIGHT_X  =  11.0f;
-    const float EVENT_ZONE_X  =  7.0f;
+    // WALL_LEFT_X / WALL_RIGHT_X: Background SpriteRenderer.bounds에서 자동 계산
+    // fallback (Background 오브젝트를 찾지 못한 경우)
+    const float FALLBACK_LEFT_X  = -11.0f;
+    const float FALLBACK_RIGHT_X =  11.0f;
     const float PLAYER_SCALE  =  0.45f;
-    const float PLAYER_X      = -8.0f;
+    // PLAYER_X: 왼쪽 벽에서 이 거리만큼 안쪽 (동적 계산)
+    const float PLAYER_LEFT_OFFSET = 3.0f;
     const float PLAYER_Y      = -3.15f;
     const float MARKER_SCALE  =  0.5f;
+    // EventTriggerZone X: 오른쪽 벽에서 이 거리만큼 안쪽
+    const float EVENT_ZONE_RIGHT_OFFSET = 4.0f;
+    // 카메라 설정 (ortho는 배경 확장 전과 동일하게 유지)
+    const float CAMERA_ORTHO_SIZE = 5.0f;
+    // 카메라 Y: 플레이어(PLAYER_Y)가 화면 하단 35% 위치에 오도록
+    // camera_Y = PLAYER_Y + ortho * (1 - 2*0.35) = -3.15 + 5*(0.30) = -1.65
+    const float CAMERA_Y = -1.65f;
 
     [MenuItem("FakeSoldier/Fix All Stage Boundaries + Player")]
     public static void FixAll()
@@ -37,17 +46,50 @@ public static class FixAllStagesHelper
         Debug.Log("모든 스테이지 수정 완료!");
     }
 
+    // Background SpriteRenderer의 world-space bounds에서 좌우 경계를 읽는다.
+    static (float leftX, float rightX) ReadBackgroundBounds(UnityEngine.SceneManagement.Scene scene)
+    {
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            if (root.name != "Background") continue;
+            var sr = root.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+                return (sr.bounds.min.x, sr.bounds.max.x);
+        }
+        return (FALLBACK_LEFT_X, FALLBACK_RIGHT_X);
+    }
+
     static void FixScene(UnityEngine.SceneManagement.Scene scene)
     {
+        var (leftX, rightX) = ReadBackgroundBounds(scene);
+        float playerStartX = leftX + PLAYER_LEFT_OFFSET;
+        float eventZoneX   = rightX - EVENT_ZONE_RIGHT_OFFSET;
+        float wallWidth    = (rightX - leftX) + 2f;  // 상하 벽은 배경보다 약간 넓게
+
         bool hasBoundaryWalls = false;
 
         foreach (var root in scene.GetRootGameObjects())
         {
-            if (root.name == "Player")
+            if (root.name == "Main Camera")
+            {
+                var cam = root.GetComponent<Camera>();
+                if (cam != null) cam.orthographicSize = CAMERA_ORTHO_SIZE;
+                // Y 위치: 플레이어가 화면 하단 35% 위치에 오도록 고정
+                var cp = root.transform.position;
+                cp.y = CAMERA_Y;
+                root.transform.position = cp;
+                // CameraFollow가 없으면 추가 (타입 직접 참조 회피 — Editor/Runtime 컴파일 순서 문제)
+                var cfType = System.Type.GetType("CameraFollow, Assembly-CSharp")
+                          ?? System.Type.GetType("CameraFollow");
+                if (cfType != null && root.GetComponent(cfType) == null)
+                    root.AddComponent(cfType);
+                EditorUtility.SetDirty(root);
+            }
+            else if (root.name == "Player")
             {
                 root.transform.localScale = new Vector3(PLAYER_SCALE, PLAYER_SCALE, 1f);
                 var p = root.transform.position;
-                p.x = PLAYER_X;
+                p.x = playerStartX;
                 p.y = PLAYER_Y;
                 root.transform.position = p;
                 EditorUtility.SetDirty(root);
@@ -55,12 +97,12 @@ public static class FixAllStagesHelper
             else if (root.name == "BoundaryWalls")
             {
                 hasBoundaryWalls = true;
-                ApplyBoundaryWalls(root, scene);
+                ApplyBoundaryWalls(root, leftX, rightX, wallWidth);
             }
             else if (root.name == "EventTriggerZone")
             {
                 var p = root.transform.position;
-                p.x = EVENT_ZONE_X;
+                p.x = eventZoneX;
                 p.y = PLAYER_Y;
                 root.transform.position = p;
                 var col = root.GetComponent<BoxCollider2D>();
@@ -82,7 +124,7 @@ public static class FixAllStagesHelper
         {
             var parent = new GameObject("BoundaryWalls");
             SceneManager.MoveGameObjectToScene(parent, scene);
-            ApplyBoundaryWalls(parent, scene);
+            ApplyBoundaryWalls(parent, leftX, rightX, wallWidth);
         }
 
         // 대화창 키힌트가 "Space / E" 등 옛 텍스트면 Enter로 교체
@@ -138,12 +180,13 @@ public static class FixAllStagesHelper
         EditorUtility.SetDirty(hintGO);
     }
 
-    static void ApplyBoundaryWalls(GameObject parent, UnityEngine.SceneManagement.Scene scene)
+    static void ApplyBoundaryWalls(GameObject parent, float leftX, float rightX, float wallWidth)
     {
-        SetWall(parent, "WallTop",    new Vector3(0,           WALL_TOP_Y,    0), new Vector2(30f, 0.5f));
-        SetWall(parent, "WallBottom", new Vector3(0,           WALL_BOTTOM_Y, 0), new Vector2(30f, 0.5f));
-        SetWall(parent, "WallLeft",   new Vector3(WALL_LEFT_X, PLAYER_Y,      0), new Vector2(0.5f, 12f));
-        SetWall(parent, "WallRight",  new Vector3(WALL_RIGHT_X, PLAYER_Y,     0), new Vector2(0.5f, 12f));
+        float centerX = (leftX + rightX) * 0.5f;
+        SetWall(parent, "WallTop",    new Vector3(centerX, WALL_TOP_Y,    0), new Vector2(wallWidth, 0.5f));
+        SetWall(parent, "WallBottom", new Vector3(centerX, WALL_BOTTOM_Y, 0), new Vector2(wallWidth, 0.5f));
+        SetWall(parent, "WallLeft",   new Vector3(leftX,   PLAYER_Y,      0), new Vector2(0.5f, 12f));
+        SetWall(parent, "WallRight",  new Vector3(rightX,  PLAYER_Y,      0), new Vector2(0.5f, 12f));
         EditorUtility.SetDirty(parent);
     }
 

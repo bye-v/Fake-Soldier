@@ -47,12 +47,12 @@ public class ChoiceSystem : MonoBehaviour
     {
         if (!active) return;
 
-        // W/S로 선택지 탐색, Enter로 확인
-        if (Input.GetKeyDown(KeyCode.W))
+        // W/UpArrow로 위, S/DownArrow로 아래, Enter/Mouse0으로 확인
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             SetSelected((selectedIndex - 1 + currentChoices.Length) % currentChoices.Length);
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
             SetSelected((selectedIndex + 1) % currentChoices.Length);
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0))
             Confirm(selectedIndex);
     }
 

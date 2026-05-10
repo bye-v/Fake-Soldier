@@ -41,11 +41,10 @@ public class DialogueManager : MonoBehaviour
     void Update()
     {
         if (!dialoguePanel.activeSelf) return;
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            if (isTyping) skipRequested = true;
-            else          NextLine();
-        }
+        bool advance = Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0);
+        if (!advance) return;
+        if (isTyping) skipRequested = true;
+        else          NextLine();
     }
 
     public void StartDialogue(IEnumerable<DialogueLine> lines, Action onDone = null)

@@ -2,6 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+[System.Serializable]
+public class DialogueSet
+{
+    public List<DialogueLine> lines = new();
+}
+
 [RequireComponent(typeof(SpriteRenderer))]
 [RequireComponent(typeof(Collider2D))]
 public class NPCController : MonoBehaviour
@@ -9,9 +15,11 @@ public class NPCController : MonoBehaviour
     [Header("NPC 정보")]
     [SerializeField] string npcName = "시민";
 
-    [Header("대화")]
+    [Header("대화 (기본)")]
     [SerializeField] List<DialogueLine> dialogueLines = new();
-    [SerializeField] bool repeatDialogue = false;
+    [Header("대화 (랜덤 세트 — 설정 시 dialogueLines 대신 사용)")]
+    [SerializeField] List<DialogueSet> dialogueSets = new();
+    [SerializeField] bool repeatDialogue = true;
 
     [Header("상호작용")]
     [SerializeField] GameObject interactIndicator;
@@ -42,7 +50,8 @@ public class NPCController : MonoBehaviour
         }
 
         // interactIndicator가 없으면 간단한 [E] 텍스트 자동 생성
-        if (!interactIndicator && dialogueLines.Count > 0)
+        bool hasDialogue = dialogueLines.Count > 0 || (dialogueSets != null && dialogueSets.Count > 0);
+        if (!interactIndicator && hasDialogue)
             CreateAutoIndicator();
     }
 
@@ -50,7 +59,7 @@ public class NPCController : MonoBehaviour
     {
         autoIndicator = new GameObject("InteractIndicator");
         autoIndicator.transform.SetParent(transform, false);
-        autoIndicator.transform.localPosition = new Vector3(0, 3.2f, 0);
+        autoIndicator.transform.localPosition = new Vector3(0, 1.8f, 0);
 
         var tmp = autoIndicator.AddComponent<TextMeshPro>();
         tmp.text         = "[ E ]";
@@ -68,7 +77,7 @@ public class NPCController : MonoBehaviour
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsActive) return;
         if (ChoiceSystem.Instance != null && ChoiceSystem.Instance.IsActive) return;
         if (!repeatDialogue && hasSpoken) return;
-        if (Input.GetKeyDown(KeyCode.E)) TalkToPlayer();
+        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Return)) TalkToPlayer();
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -90,13 +99,23 @@ public class NPCController : MonoBehaviour
 
     void TalkToPlayer()
     {
-        if (dialogueLines.Count == 0) return;
+        List<DialogueLine> chosen;
+        if (dialogueSets != null && dialogueSets.Count > 0)
+        {
+            chosen = dialogueSets[Random.Range(0, dialogueSets.Count)].lines;
+        }
+        else
+        {
+            if (dialogueLines.Count == 0) return;
+            chosen = dialogueLines;
+        }
+        if (chosen.Count == 0) return;
+
         hasSpoken = true;
         cachedPlayer?.SetCanMove(false);
-        // speaker가 비어 있으면 npcName으로 자동 채움
-        foreach (var line in dialogueLines)
+        foreach (var line in chosen)
             if (string.IsNullOrEmpty(line.speaker)) line.speaker = npcName;
-        DialogueManager.Instance.StartDialogue(dialogueLines, () => cachedPlayer?.SetCanMove(true));
+        DialogueManager.Instance.StartDialogue(chosen, () => cachedPlayer?.SetCanMove(true));
     }
 
     // StageDirector에서 직접 대화를 시작할 때 사용

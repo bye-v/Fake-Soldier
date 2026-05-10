@@ -41,7 +41,7 @@ public class DialogueManager : MonoBehaviour
     void Update()
     {
         if (!dialoguePanel.activeSelf) return;
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             if (isTyping) skipRequested = true;
             else          NextLine();
@@ -58,21 +58,39 @@ public class DialogueManager : MonoBehaviour
         NextLine();
     }
 
+    // 내면 독백 색상 (하늘색 계열로 일반 대사와 구분)
+    static readonly Color InnerVoiceColor   = new Color(0.6f, 0.85f, 1f);
+    static readonly Color NormalSpeakerColor = Color.white;
+
     void NextLine()
     {
         if (lineQueue.Count == 0) { EndDialogue(); return; }
         var line = lineQueue.Dequeue();
-        if (speakerText) speakerText.text = line.speaker;
+
+        bool isInner = line.speaker.Contains("속");
+        if (speakerText)
+        {
+            speakerText.text  = line.speaker;
+            speakerText.color = isInner ? InnerVoiceColor : NormalSpeakerColor;
+            speakerText.fontStyle = isInner
+                ? TMPro.FontStyles.Italic
+                : TMPro.FontStyles.Normal;
+        }
+
         StopAllCoroutines();
-        StartCoroutine(TypeLine(line.text));
+        StartCoroutine(TypeLine(line.text, isInner));
     }
 
-    IEnumerator TypeLine(string text)
+    IEnumerator TypeLine(string text, bool isInner = false)
     {
         isTyping = true;
         skipRequested = false;
         if (continueIndicator) continueIndicator.SetActive(false);
+
+        bodyText.color     = isInner ? InnerVoiceColor : NormalSpeakerColor;
+        bodyText.fontStyle = isInner ? TMPro.FontStyles.Italic : TMPro.FontStyles.Normal;
         bodyText.text = "";
+
         foreach (char c in text)
         {
             if (skipRequested) { bodyText.text = text; break; }

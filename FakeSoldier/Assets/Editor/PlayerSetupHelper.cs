@@ -68,7 +68,9 @@ public static class PlayerSetupHelper
                     pivot     = new Vector2(0.5f, 0.5f),
                     alignment = (int)SpriteAlignment.Center
                 };
+#pragma warning disable CS0618
             importer.spritesheet = metas;
+#pragma warning restore CS0618
             importer.SaveAndReimport();
         }
         AssetDatabase.Refresh();
@@ -651,6 +653,6 @@ public static class PlayerSetupHelper
         markerSR.color = new Color(0.9f, 0.2f, 0.2f, 0.35f);
         markerSR.sortingOrder = 2;
         if (markerSprite != null) markerSR.sprite = markerSprite;
-        marker.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+        marker.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
     }
 }

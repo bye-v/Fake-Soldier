@@ -47,19 +47,12 @@ public class ChoiceSystem : MonoBehaviour
     {
         if (!active) return;
 
-        // 숫자키 1/2/3
-        for (int i = 0; i < currentChoices.Length; i++)
-        {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
-            { Confirm(i); return; }
-        }
-
-        // 방향키 탐색
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        // W/S로 선택지 탐색, Enter로 확인
+        if (Input.GetKeyDown(KeyCode.W))
             SetSelected((selectedIndex - 1 + currentChoices.Length) % currentChoices.Length);
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.S))
             SetSelected((selectedIndex + 1) % currentChoices.Length);
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.E))
             Confirm(selectedIndex);
     }
 
@@ -93,9 +86,17 @@ public class ChoiceSystem : MonoBehaviour
         for (int i = 0; i < choiceButtons.Length; i++)
         {
             if (!choiceButtons[i].gameObject.activeSelf) continue;
-            var colors = choiceButtons[i].colors;
-            colors.normalColor = i == idx ? highlightColor : normalColor;
-            choiceButtons[i].colors = colors;
+            bool sel = (i == idx);
+
+            // 버튼 배경색 (alpha=0이어서 colorBlock으로는 안 보이므로 직접 설정)
+            var img = choiceButtons[i].GetComponent<Image>();
+            if (img) img.color = sel
+                ? new Color(0.9f, 0.75f, 0.1f, 0.28f)
+                : new Color(1f, 1f, 1f, 0.05f);
+
+            // 텍스트 색상
+            if (i < choiceTexts.Length && choiceTexts[i])
+                choiceTexts[i].color = sel ? new Color(1f, 0.92f, 0.3f) : Color.white;
         }
         selectedIndex = idx;
     }
@@ -121,7 +122,7 @@ public class ChoiceSystem : MonoBehaviour
         while (timeLeft > 0)
         {
             timeLeft -= Time.deltaTime;
-            if (timerText) timerText.text = $"{Mathf.CeilToInt(timeLeft)}";
+            if (timerText) timerText.text = $"{Mathf.CeilToInt(timeLeft)}초";
             yield return null;
         }
         // 시간 초과 → 첫 번째 선택(명령 이행) 강제 선택

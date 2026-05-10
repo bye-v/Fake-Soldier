@@ -240,7 +240,7 @@ public static class SceneSetupHelper
         var playerSR = playerGO.AddComponent<SpriteRenderer>();
         playerSR.color = new Color(0.9f, 0.9f, 0.9f);
         playerSR.sortingOrder = 1;
-        playerGO.transform.position = new Vector3(-3f, -1.5f, 0);
+        playerGO.transform.position = new Vector3(-8f, -3.0f, 0);
         playerGO.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
         var rb2d = playerGO.AddComponent<Rigidbody2D>();
         rb2d.gravityScale = 0;
@@ -255,6 +255,20 @@ public static class SceneSetupHelper
 
         SetupDialogueUI(uiCT);
         SetupChoiceUI(uiCT);
+
+        // 조작법 힌트 패널 (상단 중앙, 자동 페이드)
+        var ctrlRT = MakeRect("ControlsHint", uiCT, new Vector2(0.5f, 1f), new Vector2(0, -50), new Vector2(500, 70));
+        ctrlRT.gameObject.AddComponent<UnityEngine.UI.Image>().color = new Color(0.04f, 0.04f, 0.06f, 0.90f);
+        var ctrlCG = ctrlRT.gameObject.AddComponent<CanvasGroup>();
+        var ctrlLbl = MakeRect("Label", ctrlRT, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(470, 54));
+        var ctrlTMP = ctrlLbl.gameObject.AddComponent<TextMeshProUGUI>();
+        ctrlTMP.text = "<color=#FFD060>WASD</color>  이동     <color=#FFD060>E</color>  대화";
+        ctrlTMP.fontSize = 28;
+        ctrlTMP.color = new Color(0.9f, 0.9f, 0.9f);
+        ctrlTMP.alignment = TextAlignmentOptions.Center;
+        var chc = ctrlRT.gameObject.AddComponent<ControlsHintController>();
+        var bfC = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        typeof(ControlsHintController).GetField("canvasGroup", bfC)?.SetValue(chc, ctrlCG);
 
         // GameManager (씬에 없을 경우 대비)
         new GameObject("GameManager").AddComponent<GameManager>();
@@ -291,7 +305,7 @@ public static class SceneSetupHelper
         bodyTMP.fontSize = 26;
         bodyTMP.color = Color.white;
         bodyTMP.alignment = TextAlignmentOptions.TopLeft;
-        bodyTMP.enableWordWrapping = true;
+        bodyTMP.textWrappingMode = TMPro.TextWrappingModes.Normal;
 
         // 계속 표시 화살표
         var contRT = MakeRect("ContinueIndicator", panelRT, new Vector2(0.95f, 0.1f), Vector2.zero, new Vector2(40, 40));
@@ -300,6 +314,14 @@ public static class SceneSetupHelper
         contTMP.fontSize = 22;
         contTMP.color = new Color(0.8f, 0.8f, 0.8f, 0.8f);
         contTMP.alignment = TextAlignmentOptions.Center;
+
+        // 키 힌트 (대화창 우하단)
+        var dlgHintRT = MakeRect("KeyHint", panelRT, new Vector2(0.79f, 0.1f), Vector2.zero, new Vector2(260, 28));
+        var dlgHintTMP = dlgHintRT.gameObject.AddComponent<TextMeshProUGUI>();
+        dlgHintTMP.text = "<color=#FFD060>Enter</color>  계속";
+        dlgHintTMP.fontSize = 20;
+        dlgHintTMP.color = new Color(0.6f, 0.6f, 0.6f, 0.8f);
+        dlgHintTMP.alignment = TextAlignmentOptions.Right;
 
         panelRT.gameObject.SetActive(false);
 
@@ -355,6 +377,14 @@ public static class SceneSetupHelper
         timerTMP.alignment = TextAlignmentOptions.Center;
         timerRT.gameObject.SetActive(false);
 
+        // 키 힌트 (선택지 패널 하단)
+        var choiceHintRT = MakeRect("KeyHint", panelRT, new Vector2(0.5f, 0.04f), Vector2.zero, new Vector2(720, 28));
+        var choiceHintTMP = choiceHintRT.gameObject.AddComponent<TextMeshProUGUI>();
+        choiceHintTMP.text = "<color=#FFD060>W / S</color>  이동     <color=#FFD060>Enter</color>  확인";
+        choiceHintTMP.fontSize = 20;
+        choiceHintTMP.color = new Color(0.55f, 0.55f, 0.55f, 0.75f);
+        choiceHintTMP.alignment = TextAlignmentOptions.Center;
+
         panelRT.gameObject.SetActive(false);
 
         // ChoiceSystem 연결
@@ -365,6 +395,87 @@ public static class SceneSetupHelper
         typeof(ChoiceSystem).GetField("choiceButtons", bf)?.SetValue(choiceSys, buttons);
         typeof(ChoiceSystem).GetField("choiceTexts",   bf)?.SetValue(choiceSys, texts);
         typeof(ChoiceSystem).GetField("timerText",     bf)?.SetValue(choiceSys, timerTMP);
+    }
+
+    // ── 스테이지 UI 힌트 일괄 추가 (씬 재구성 없이) ───────────────
+
+    [MenuItem("FakeSoldier/Fix All Stage UI Hints")]
+    public static void FixAllStageUIHints()
+    {
+        string[] stages = {
+            "Assets/Scenes/Stage_01.unity",
+            "Assets/Scenes/Stage_02.unity",
+            "Assets/Scenes/Stage_03.unity",
+            "Assets/Scenes/Stage_04.unity",
+            "Assets/Scenes/Stage_05.unity",
+        };
+        foreach (var path in stages)
+        {
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            FixStageUIHintsInScene(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"[UIHints] {path} 완료");
+        }
+        Debug.Log("모든 스테이지 UI 힌트 추가 완료!");
+    }
+
+    static void FixStageUIHintsInScene(UnityEngine.SceneManagement.Scene scene)
+    {
+        Transform uiCanvasTr = null;
+        foreach (var root in scene.GetRootGameObjects())
+            if (root.name == "UICanvas") { uiCanvasTr = root.transform; break; }
+        if (uiCanvasTr == null) return;
+
+        var bf = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+
+        // 기존 힌트 제거 후 재생성
+        var old = uiCanvasTr.Find("ControlsHint");
+        if (old != null) Object.DestroyImmediate(old.gameObject);
+
+        // 조작법 힌트 패널 (상단 중앙, 자동 페이드)
+        var ctrlRT = MakeRect("ControlsHint", uiCanvasTr, new Vector2(0.5f, 1f), new Vector2(0, -50), new Vector2(500, 70));
+        ctrlRT.gameObject.AddComponent<Image>().color = new Color(0.04f, 0.04f, 0.06f, 0.90f);
+        var ctrlCG = ctrlRT.gameObject.AddComponent<CanvasGroup>();
+        var ctrlLbl = MakeRect("Label", ctrlRT, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(470, 54));
+        var ctrlTMP = ctrlLbl.gameObject.AddComponent<TextMeshProUGUI>();
+        ctrlTMP.text = "<color=#FFD060>WASD</color>  이동     <color=#FFD060>E</color>  대화";
+        ctrlTMP.fontSize = 28;
+        ctrlTMP.color = new Color(0.9f, 0.9f, 0.9f);
+        ctrlTMP.alignment = TextAlignmentOptions.Center;
+        var chc = ctrlRT.gameObject.AddComponent<ControlsHintController>();
+        typeof(ControlsHintController).GetField("canvasGroup", bf)?.SetValue(chc, ctrlCG);
+        EditorUtility.SetDirty(ctrlRT.gameObject);
+
+        // 대화창 키 힌트
+        var dlgPanel = uiCanvasTr.Find("DialoguePanel");
+        if (dlgPanel != null)
+        {
+            var oldH = dlgPanel.Find("KeyHint");
+            if (oldH != null) Object.DestroyImmediate(oldH.gameObject);
+            var hintRT = MakeRect("KeyHint", dlgPanel, new Vector2(0.79f, 0.1f), Vector2.zero, new Vector2(260, 28));
+            var hintTMP = hintRT.gameObject.AddComponent<TextMeshProUGUI>();
+            hintTMP.text = "<color=#FFD060>E</color> · <color=#FFD060>Space</color>  계속";
+            hintTMP.fontSize = 20;
+            hintTMP.color = new Color(0.6f, 0.6f, 0.6f, 0.8f);
+            hintTMP.alignment = TextAlignmentOptions.Right;
+            EditorUtility.SetDirty(hintRT.gameObject);
+        }
+
+        // 선택지 키 힌트
+        var choicePanel = uiCanvasTr.Find("ChoicePanel");
+        if (choicePanel != null)
+        {
+            var oldH2 = choicePanel.Find("KeyHint");
+            if (oldH2 != null) Object.DestroyImmediate(oldH2.gameObject);
+            var hintRT2 = MakeRect("KeyHint", choicePanel, new Vector2(0.5f, 0.04f), Vector2.zero, new Vector2(720, 28));
+            var hintTMP2 = hintRT2.gameObject.AddComponent<TextMeshProUGUI>();
+            hintTMP2.text = "<color=#FFD060>W / S</color>  이동     <color=#FFD060>Enter</color>  확인";
+            hintTMP2.fontSize = 20;
+            hintTMP2.color = new Color(0.6f, 0.6f, 0.6f, 0.8f);
+            hintTMP2.alignment = TextAlignmentOptions.Center;
+            EditorUtility.SetDirty(hintRT2.gameObject);
+        }
     }
 
     // ── 스테이지 씬 개별 메뉴 ──────────────────────────────────────
@@ -397,15 +508,13 @@ public static class SceneSetupHelper
         var canvas = SetupCanvas("Canvas");
         var ct = canvas.transform;
 
-        MakeTMP(ct, new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(900, 100), title, 60, new Color(0.85f, 0.2f, 0.2f), FontStyles.Bold);
-
         var bodyRT = MakeRect("BodyText", ct, new Vector2(0.5f, 0.52f), Vector2.zero, new Vector2(1200, 300));
         var bodyTMP = bodyRT.gameObject.AddComponent<TextMeshProUGUI>();
         bodyTMP.text = "";
         bodyTMP.fontSize = 28;
         bodyTMP.color = Color.white;
         bodyTMP.alignment = TextAlignmentOptions.Center;
-        bodyTMP.enableWordWrapping = true;
+        bodyTMP.textWrappingMode = TMPro.TextWrappingModes.Normal;
 
         var scoreRT = MakeRect("ScoreText", ct, new Vector2(0.5f, 0.3f), Vector2.zero, new Vector2(600, 50));
         var scoreTMP = scoreRT.gameObject.AddComponent<TextMeshProUGUI>();
@@ -433,7 +542,7 @@ public static class SceneSetupHelper
         var ecGO = new GameObject("EndingController");
         var ec = ecGO.AddComponent<EndingController>();
         var bf = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-        typeof(EndingController).GetField("titleText",      bf)?.SetValue(ec, MakeRect("_tmp",ct,Vector2.zero,Vector2.zero,Vector2.zero).gameObject.AddComponent<TextMeshProUGUI>());
+        typeof(EndingController).GetField("titleText",      bf)?.SetValue(ec, MakeTMP(ct, new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(900, 100), title, 60, new Color(0.85f, 0.2f, 0.2f), FontStyles.Bold));
         typeof(EndingController).GetField("bodyText",       bf)?.SetValue(ec, bodyTMP);
         typeof(EndingController).GetField("scoreText",      bf)?.SetValue(ec, scoreTMP);
         typeof(EndingController).GetField("creditButton",   bf)?.SetValue(ec, creditBtn);
@@ -441,9 +550,6 @@ public static class SceneSetupHelper
         typeof(EndingController).GetField("endingType",     bf)?.SetValue(ec, type);
         if (victimTMP != null)
             typeof(EndingController).GetField("victimCountText", bf)?.SetValue(ec, victimTMP);
-
-        // titleText를 올바른 오브젝트로 덮어쓰기
-        typeof(EndingController).GetField("titleText", bf)?.SetValue(ec, MakeTMP(ct, new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(900, 100), title, 60, new Color(0.85f, 0.2f, 0.2f), FontStyles.Bold));
 
         EnsureEventSystem(scene);
         EditorSceneManager.MarkSceneDirty(scene);
@@ -457,6 +563,18 @@ public static class SceneSetupHelper
     public static void SetupEndingNormal() => SetupEndingBase(EndingType.Normal, "방관 엔딩");
     [MenuItem("FakeSoldier/Setup Ending True")]
     public static void SetupEndingTrue()   => SetupEndingBase(EndingType.True,   "거부 엔딩");
+
+    [MenuItem("FakeSoldier/Setup All Endings (Batch)")]
+    public static void SetupAllEndings()
+    {
+        EditorSceneManager.OpenScene("Assets/Scenes/Ending_Bad.unity",    OpenSceneMode.Single);
+        SetupEndingBase(EndingType.Bad,    "복종 엔딩");
+        EditorSceneManager.OpenScene("Assets/Scenes/Ending_Normal.unity", OpenSceneMode.Single);
+        SetupEndingBase(EndingType.Normal, "방관 엔딩");
+        EditorSceneManager.OpenScene("Assets/Scenes/Ending_True.unity",   OpenSceneMode.Single);
+        SetupEndingBase(EndingType.True,   "거부 엔딩");
+        Debug.Log("모든 엔딩 씬 재구성 완료!");
+    }
 
     // ── Credit 씬 ───────────────────────────────────────────────────
 
@@ -493,7 +611,7 @@ public static class SceneSetupHelper
         creditTMP.fontSize = 28;
         creditTMP.color = Color.white;
         creditTMP.alignment = TextAlignmentOptions.Center;
-        creditTMP.enableWordWrapping = true;
+        creditTMP.textWrappingMode = TMPro.TextWrappingModes.Normal;
 
         var skipBtn = MakeButton("SkipButton", "건너뛰기", ct, new Vector2(0.95f, 0.95f), Vector2.zero, new Vector2(200, 50));
         ((TextMeshProUGUI)skipBtn.GetComponentInChildren<TextMeshProUGUI>()).fontSize = 22;

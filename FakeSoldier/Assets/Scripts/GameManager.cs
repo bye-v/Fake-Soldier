@@ -27,7 +27,9 @@ public class GameManager : MonoBehaviour
 
     public EndingType GetEnding()
     {
-        if (ConscienceScore <= BAD_MAX) return EndingType.Bad;
+        // 발포를 직접 거부한 경우 최소 Normal 엔딩 보장
+        if (ConscienceScore <= BAD_MAX)
+            return HasRefusedFiring ? EndingType.Normal : EndingType.Bad;
         if (ConscienceScore <= NORMAL_MAX) return EndingType.Normal;
         return EndingType.True;
     }

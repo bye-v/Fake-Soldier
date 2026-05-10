@@ -77,7 +77,7 @@ public class NPCController : MonoBehaviour
         if (DialogueManager.Instance != null && DialogueManager.Instance.IsActive) return;
         if (ChoiceSystem.Instance != null && ChoiceSystem.Instance.IsActive) return;
         if (!repeatDialogue && hasSpoken) return;
-        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Return)) TalkToPlayer();
+        if (Input.GetKeyDown(KeyCode.E)) TalkToPlayer();
     }
 
     void OnTriggerEnter2D(Collider2D other)

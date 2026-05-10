@@ -1,14 +1,12 @@
 using UnityEngine;
 
-/// Background SpriteRenderer의 bounds를 읽어 카메라를 플레이어에게 부드럽게 고정.
-/// Main Camera에 부착. 배경 범위 밖으로 카메라가 벗어나지 않도록 클램프.
 [RequireComponent(typeof(Camera))]
 public class CameraFollow : MonoBehaviour
 {
     [SerializeField] Transform target;
     [SerializeField] float smoothSpeed = 6f;
     [SerializeField] bool followX = true;
-    [SerializeField] bool followY = false;  // 횡스크롤 레벨이므로 Y는 기본 고정
+    [SerializeField] bool followY = false;
 
     Camera cam;
     float minX, maxX;

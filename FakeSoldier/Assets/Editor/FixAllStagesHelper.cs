@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -12,18 +13,17 @@ public static class FixAllStagesHelper
     // fallback (Background 오브젝트를 찾지 못한 경우)
     const float FALLBACK_LEFT_X  = -11.0f;
     const float FALLBACK_RIGHT_X =  11.0f;
-    const float PLAYER_SCALE  =  0.45f;
+    const float PLAYER_SCALE  =  0.62f;
     // PLAYER_X: 왼쪽 벽에서 이 거리만큼 안쪽 (동적 계산)
     const float PLAYER_LEFT_OFFSET = 3.0f;
     const float PLAYER_Y      = -3.15f;
     const float MARKER_SCALE  =  0.5f;
     // EventTriggerZone X: 오른쪽 벽에서 이 거리만큼 안쪽
     const float EVENT_ZONE_RIGHT_OFFSET = 4.0f;
-    // 카메라 설정 (ortho는 배경 확장 전과 동일하게 유지)
+    // 카메라 ortho: 원래 값 유지 (배경이 세로로 꽉 채워지면 스케일 자동 계산)
     const float CAMERA_ORTHO_SIZE = 5.0f;
-    // 카메라 Y: 플레이어(PLAYER_Y)가 화면 하단 35% 위치에 오도록
-    // camera_Y = PLAYER_Y + ortho * (1 - 2*0.35) = -3.15 + 5*(0.30) = -1.65
-    const float CAMERA_Y = -1.65f;
+    // 카메라 Y: 0으로 고정 (배경이 Y=-ortho~+ortho 가득 채울 때 완벽히 맞아떨어짐)
+    const float CAMERA_Y = 0f;
 
     [MenuItem("FakeSoldier/Fix All Stage Boundaries + Player")]
     public static void FixAll()
@@ -61,10 +61,29 @@ public static class FixAllStagesHelper
 
     static void FixScene(UnityEngine.SceneManagement.Scene scene)
     {
+        // ── Step 1: Background 스케일을 먼저 설정 (세로가 카메라를 꽉 채우도록) ──
+        // scale = (2 × ortho) / sprite.bounds.size.y
+        // sprite.bounds는 로컬 공간 크기 (= pixelHeight / PPU)
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            if (root.name != "Background") continue;
+            var sr = root.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                float spriteLocalH = sr.sprite.bounds.size.y;   // PPU 기준 높이
+                float targetWorldH  = CAMERA_ORTHO_SIZE * 2f;   // 화면 전체 높이
+                float newScale      = targetWorldH / spriteLocalH;
+                root.transform.localScale = new Vector3(newScale, newScale, 1f);
+                EditorUtility.SetDirty(root);
+            }
+            break;
+        }
+
+        // ── Step 2: 스케일 반영 후 bounds 재계산 ──
         var (leftX, rightX) = ReadBackgroundBounds(scene);
         float playerStartX = leftX + PLAYER_LEFT_OFFSET;
         float eventZoneX   = rightX - EVENT_ZONE_RIGHT_OFFSET;
-        float wallWidth    = (rightX - leftX) + 2f;  // 상하 벽은 배경보다 약간 넓게
+        float wallWidth    = (rightX - leftX) + 2f;
 
         bool hasBoundaryWalls = false;
 
@@ -78,9 +97,9 @@ public static class FixAllStagesHelper
                 var cp = root.transform.position;
                 cp.y = CAMERA_Y;
                 root.transform.position = cp;
-                // CameraFollow가 없으면 추가 (타입 직접 참조 회피 — Editor/Runtime 컴파일 순서 문제)
-                var cfType = System.Type.GetType("CameraFollow, Assembly-CSharp")
-                          ?? System.Type.GetType("CameraFollow");
+                var cfType = System.AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => { try { return a.GetTypes(); } catch { return System.Type.EmptyTypes; } })
+                    .FirstOrDefault(t => t.Name == "CameraFollow");
                 if (cfType != null && root.GetComponent(cfType) == null)
                     root.AddComponent(cfType);
                 EditorUtility.SetDirty(root);

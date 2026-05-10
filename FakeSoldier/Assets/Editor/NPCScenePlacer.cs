@@ -13,7 +13,8 @@ public static class NPCScenePlacer
     const string S_CTRL = "Assets/Animations/NPC/NPC_StudentController.controller";
     const string C_CTRL = "Assets/Animations/NPC/NPC_CivilianController.controller";
 
-    const float ZX = 7.0f;
+    const float ZX = 18.22f;
+    const float NPC_SCALE = 1.4f;
     const float ZY = -3.15f;
 
     [MenuItem("FakeSoldier/Place NPCs in All Stages")]
@@ -56,7 +57,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Student_Alone", displayName = "학생", isStudent = true,
-            direction = "SOUTH", pos = new Vector3(-7.5f, -3.5f, 0), scale = 0.39f,
+            direction = "SOUTH", pos = new Vector3(-15f, -3.5f, 0), scale = 0.39f,
             tint = new Color(0.80f, 0.87f, 1.00f),
             lines = new[]
             {
@@ -69,7 +70,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Student_Shout", displayName = "학생", isStudent = true,
-            direction = "WEST", pos = new Vector3(-2.5f, -2.7f, 0), scale = 0.48f,
+            direction = "WEST", pos = new Vector3(-5f, -2.7f, 0), scale = 0.48f,
             tint = new Color(1.00f, 0.83f, 0.65f),
             lines = new[]
             {
@@ -148,7 +149,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Elder", displayName = "노인", isStudent = false,
-            direction = "SOUTH", pos = new Vector3(-7.5f, -3.2f, 0), scale = 0.54f,
+            direction = "SOUTH", pos = new Vector3(-15f, -3.2f, 0), scale = 0.54f,
             tint = new Color(0.78f, 0.74f, 0.66f),
             lines = new[]
             {
@@ -161,7 +162,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Mother", displayName = "여성", isStudent = false,
-            direction = "EAST", pos = new Vector3(-0.5f, -3.8f, 0), scale = 0.42f,
+            direction = "EAST", pos = new Vector3(-1f, -3.8f, 0), scale = 0.42f,
             tint = new Color(1.00f, 0.86f, 0.86f),
             lines = new[]
             {
@@ -205,7 +206,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Wife", displayName = "여성", isStudent = false,
-            direction = "WEST", pos = new Vector3(-6f, -3.6f, 0), scale = 0.43f,
+            direction = "WEST", pos = new Vector3(-12f, -3.6f, 0), scale = 0.43f,
             tint = new Color(1.00f, 0.58f, 0.58f), // 진한 빨강 — 피, 충혈된 눈, 절박함
             lines = new[]
             {
@@ -219,7 +220,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_AngerElder", displayName = "노인", isStudent = false,
-            direction = "EAST", pos = new Vector3(1f, -2.8f, 0), scale = 0.54f,
+            direction = "EAST", pos = new Vector3(2f, -2.8f, 0), scale = 0.54f,
             tint = new Color(0.85f, 0.68f, 0.55f), // 붉은 황갈색 — 노인의 분노와 당혹
             lines = new[]
             {
@@ -269,7 +270,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Father", displayName = "시민군", isStudent = false,
-            direction = "EAST", pos = new Vector3(-7.5f, -3.1f, 0), scale = 0.54f,
+            direction = "EAST", pos = new Vector3(-15f, -3.1f, 0), scale = 0.54f,
             tint = new Color(0.85f, 0.78f, 0.65f),
             lines = new[]
             {
@@ -282,7 +283,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_YoungMilitia", displayName = "시민군", isStudent = true,
-            direction = "SOUTH", pos = new Vector3(-1f, -3.8f, 0), scale = 0.40f,
+            direction = "SOUTH", pos = new Vector3(-2f, -3.8f, 0), scale = 0.40f,
             tint = new Color(0.82f, 0.92f, 0.80f),
             lines = new[]
             {
@@ -342,7 +343,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_ParkJungKook", displayName = "부상자", isStudent = false,
-            direction = "SOUTH", pos = new Vector3(-7.5f, -3.9f, 0), scale = 0.32f,
+            direction = "SOUTH", pos = new Vector3(-15f, -3.9f, 0), scale = 0.32f,
             tint = new Color(0.48f, 0.25f, 0.25f), // 검붉음 — 심각한 출혈, 빈사 상태
             lines = new[]
             {
@@ -408,7 +409,7 @@ public static class NPCScenePlacer
         var go = new GameObject(def.goName);
         SceneManager.MoveGameObjectToScene(go, scene);
         go.transform.position   = def.pos;
-        float s = def.scale > 0f ? def.scale : 0.45f;
+        float s = (def.scale > 0f ? def.scale : 0.45f) * NPC_SCALE;
         go.transform.localScale = new Vector3(s, s, 1f);
 
         var sr = go.AddComponent<SpriteRenderer>();

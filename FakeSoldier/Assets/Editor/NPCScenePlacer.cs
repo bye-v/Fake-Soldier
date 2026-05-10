@@ -38,6 +38,8 @@ public static class NPCScenePlacer
         public float   scale;
         public Color   tint;
         public (string spk, string txt)[] lines;
+        public bool  isFallen;  // 쓰러진 NPC: -90° 회전 + 혈흔 풀 생성
+        public float rotZ;      // isFallen=true일 때 각도 오버라이드 (기본 -90)
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -129,6 +131,21 @@ public static class NPCScenePlacer
             direction = "SOUTH", pos = new Vector3(ZX + 1.3f, ZY + 0.80f, 0), scale = 0.33f,
             tint = new Color(0.88f, 0.78f, 1.00f),
             lines = System.Array.Empty<(string, string)>()
+        },
+        // ── 추가: 왼쪽에서 달려오는 학생들 (군중 합류) ───────────
+        new NPCDef
+        {
+            goName = "NPC_Rushing_A", displayName = "학생", isStudent = true,
+            direction = "EAST", pos = new Vector3(ZX - 2.8f, ZY + 0.20f, 0), scale = 0.41f,
+            tint = new Color(0.90f, 0.82f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef
+        {
+            goName = "NPC_Rushing_B", displayName = "학생", isStudent = true,
+            direction = "EAST", pos = new Vector3(ZX - 3.4f, ZY - 0.30f, 0), scale = 0.38f,
+            tint = new Color(0.82f, 0.90f, 0.85f),
+            lines = System.Array.Empty<(string, string)>()
         }
     };
 
@@ -183,7 +200,23 @@ public static class NPCScenePlacer
         {
             goName = "NPC_Hiding_Peek", displayName = "주민", isStudent = false,
             direction = "WEST", pos = new Vector3(ZX + 0.7f, ZY + 0.60f, 0), scale = 0.36f,
-            tint = new Color(0.58f, 0.62f, 0.70f), // 약간 밝지만 여전히 어두운 파란 회색
+            tint = new Color(0.58f, 0.62f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // ── 추가: 어머니 곁에 웅크린 아이 ("이불 속에서 안 나와요" 언급) ─
+        new NPCDef
+        {
+            goName = "NPC_Child_Hide", displayName = "아이", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(-1.8f, -3.65f, 0), scale = 0.20f,
+            tint = new Color(0.88f, 0.86f, 0.80f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // ── 추가: 골목 안쪽에 웅크린 노인 ───────────────────────────
+        new NPCDef
+        {
+            goName = "NPC_Elder_Hiding", displayName = "주민", isStudent = false,
+            direction = "EAST", pos = new Vector3(-9f, -3.3f, 0), scale = 0.46f,
+            tint = new Color(0.72f, 0.68f, 0.60f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
@@ -244,12 +277,12 @@ public static class NPCScenePlacer
             tint = new Color(0.70f, 0.80f, 0.62f),
             lines = System.Array.Empty<(string, string)>()
         },
-        new NPCDef // ★ 길바닥에 쓰러진 남편 ★ — 핵심 시각 요소
-                   // 극히 작은 스케일 + 어두운 혈색 → 총상으로 쓰러진 모습 표현
+        new NPCDef // ★ 길바닥에 쓰러진 남편 ★ — 총상, 눕혀진 모습 + 혈흔 풀
         {
             goName = "NPC_Husband_Fallen", displayName = "부상자", isStudent = false,
-            direction = "SOUTH", pos = new Vector3(ZX - 1.3f, ZY - 0.40f, 0), scale = 0.28f,
-            tint = new Color(0.48f, 0.22f, 0.22f), // 거의 검붉음 — 혈흔, 의식 잃어가는 상태
+            direction = "SOUTH", pos = new Vector3(ZX - 1.3f, ZY - 0.35f, 0), scale = 0.38f,
+            isFallen = true,
+            tint = new Color(0.72f, 0.68f, 0.64f), // 자연스러운 색상 (누운 상태로 보임)
             lines = System.Array.Empty<(string, string)>()
         }
     };
@@ -314,12 +347,12 @@ public static class NPCScenePlacer
             tint = new Color(0.82f, 0.86f, 0.70f),
             lines = System.Array.Empty<(string, string)>()
         },
-        new NPCDef // ★ 부상당한 시민군 ★ — 이미 총상을 입고 주저앉은 상태
-                   // 작은 스케일 + 어두운 혈색 → 교전이 이미 시작됐음을 암시
+        new NPCDef // ★ 부상당한 시민군 ★ — 쓰러진 상태 + 혈흔 풀
         {
             goName = "NPC_Defender_Wounded", displayName = "시민군", isStudent = true,
-            direction = "SOUTH", pos = new Vector3(ZX + 0.7f, ZY + 0.65f, 0), scale = 0.34f,
-            tint = new Color(0.62f, 0.30f, 0.30f), // 어두운 빨강 — 총상, 출혈
+            direction = "SOUTH", pos = new Vector3(ZX + 0.7f, ZY + 0.65f, 0), scale = 0.42f,
+            isFallen = true, rotZ = -65f,
+            tint = new Color(0.70f, 0.65f, 0.60f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
@@ -343,8 +376,9 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_ParkJungKook", displayName = "부상자", isStudent = false,
-            direction = "SOUTH", pos = new Vector3(-15f, -3.9f, 0), scale = 0.32f,
-            tint = new Color(0.48f, 0.25f, 0.25f), // 검붉음 — 심각한 출혈, 빈사 상태
+            direction = "SOUTH", pos = new Vector3(-15f, -3.75f, 0), scale = 0.45f,
+            isFallen = true,
+            tint = new Color(0.68f, 0.63f, 0.60f), // 자연스러운 색상 (혈흔 풀로 표현)
             lines = new[]
             {
                 ("부상자", "...숨 쉬기가 힘들어요."),
@@ -385,6 +419,31 @@ public static class NPCScenePlacer
             direction = "SOUTH", pos = new Vector3(ZX + 1.1f, ZY + 0.40f, 0), scale = 0.46f,
             tint = new Color(0.65f, 0.75f, 0.58f),
             lines = System.Array.Empty<(string, string)>()
+        },
+        // ── 추가: 쓰러진 사람들 (생존자 대사 "같이 있던 사람이 여덟이었어요") ──
+        new NPCDef
+        {
+            goName = "NPC_Fallen_A", displayName = "희생자", isStudent = false,
+            direction = "EAST", pos = new Vector3(-5.5f, -3.7f, 0), scale = 0.40f,
+            isFallen = true, rotZ = -80f,
+            tint = new Color(0.60f, 0.58f, 0.55f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef
+        {
+            goName = "NPC_Fallen_B", displayName = "희생자", isStudent = true,
+            direction = "SOUTH", pos = new Vector3(-8.5f, -3.85f, 0), scale = 0.36f,
+            isFallen = true,
+            tint = new Color(0.62f, 0.60f, 0.57f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef
+        {
+            goName = "NPC_Fallen_C", displayName = "희생자", isStudent = true,
+            direction = "WEST", pos = new Vector3(-10.5f, -3.60f, 0), scale = 0.38f,
+            isFallen = true, rotZ = -110f,
+            tint = new Color(0.64f, 0.61f, 0.58f),
+            lines = System.Array.Empty<(string, string)>()
         }
     };
 
@@ -393,7 +452,9 @@ public static class NPCScenePlacer
     {
         var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
         foreach (var root in scene.GetRootGameObjects())
-            if (root.GetComponent<NPCController>() != null)
+            if (root.GetComponent<NPCController>() != null ||
+                root.name == "BloodPool" ||
+                root.name.StartsWith("NPC_"))
                 Object.DestroyImmediate(root);
 
         foreach (var def in defs)
@@ -412,11 +473,22 @@ public static class NPCScenePlacer
         float s = (def.scale > 0f ? def.scale : 0.45f) * NPC_SCALE;
         go.transform.localScale = new Vector3(s, s, 1f);
 
+        // 쓰러진 NPC: Z축 회전으로 눕힘
+        if (def.isFallen)
+        {
+            float rz = !Mathf.Approximately(def.rotZ, 0f) ? def.rotZ : -90f;
+            go.transform.rotation = Quaternion.Euler(0, 0, rz);
+        }
+
         var sr = go.AddComponent<SpriteRenderer>();
         var pngPath = string.Format(def.isStudent ? S_PNG : C_PNG, def.direction);
         sr.sprite       = LoadFrame0(pngPath);
         sr.color        = def.tint.a > 0f ? def.tint : Color.white;
         sr.sortingOrder = Mathf.Max(1, Mathf.RoundToInt(-def.pos.y));
+
+        // 쓰러진 NPC: 혈흔 풀 생성
+        if (def.isFallen)
+            AddBloodPool(scene, def.pos, s, sr.sortingOrder);
 
         var anim = go.AddComponent<Animator>();
         var ctrl = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
@@ -427,18 +499,95 @@ public static class NPCScenePlacer
         anim.SetFloat("MoveX", dirVec.x);
         anim.SetFloat("MoveY", dirVec.y);
 
-        var col   = go.AddComponent<BoxCollider2D>();
-        col.isTrigger = true;
-        col.size      = new Vector2(1.2f, 1.2f);
+        bool hasDialogue = def.lines != null && def.lines.Length > 0;
 
-        var npc = go.AddComponent<NPCController>();
-        var bf  = BindingFlags.NonPublic | BindingFlags.Instance;
-        var t   = typeof(NPCController);
-        t.GetField("npcName",        bf)?.SetValue(npc, def.displayName);
-        t.GetField("dialogueLines",  bf)?.SetValue(npc, BuildLines(def.lines));
-        t.GetField("defaultFaceDir", bf)?.SetValue(npc, dirVec);
+        // 장식용 쓰러진 NPC는 콜라이더/NPCController 없이 비용 절감
+        if (!def.isFallen || hasDialogue)
+        {
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size      = def.isFallen ? new Vector2(1.5f, 1.5f) : new Vector2(1.2f, 1.2f);
+
+            var npc = go.AddComponent<NPCController>();
+            var bf  = BindingFlags.NonPublic | BindingFlags.Instance;
+            var t   = typeof(NPCController);
+            t.GetField("npcName",        bf)?.SetValue(npc, def.displayName);
+            t.GetField("dialogueLines",  bf)?.SetValue(npc, BuildLines(def.lines));
+            t.GetField("defaultFaceDir", bf)?.SetValue(npc, dirVec);
+        }
 
         EditorUtility.SetDirty(go);
+    }
+
+    // ── 혈흔 풀: 어두운 타원형 스프라이트 ──────────────────────────────
+    static void AddBloodPool(UnityEngine.SceneManagement.Scene scene,
+                             Vector3 pos, float npcScale, int baseSortOrder)
+    {
+        var poolGO = new GameObject("BloodPool");
+        SceneManager.MoveGameObjectToScene(poolGO, scene);
+        poolGO.transform.position   = new Vector3(pos.x, pos.y - 0.05f, 0f);
+        poolGO.transform.localScale = new Vector3(npcScale * 2.4f, npcScale * 1.0f, 1f);
+        var psr = poolGO.AddComponent<SpriteRenderer>();
+        psr.sprite      = CreateBloodPoolSprite();
+        psr.sortingOrder = baseSortOrder - 1;
+        EditorUtility.SetDirty(poolGO);
+    }
+
+    static Sprite CreateBloodPoolSprite()
+    {
+        const string assetPath = "Assets/Sprites/FX/blood_pool.png";
+
+        // 이미 있으면 재사용
+        var existing = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        if (existing != null) return existing;
+
+        // FX 폴더 생성
+        if (!AssetDatabase.IsValidFolder("Assets/Sprites/FX"))
+            AssetDatabase.CreateFolder("Assets/Sprites", "FX");
+
+        const int W = 48, H = 20;
+        var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Point;
+        tex.wrapMode   = TextureWrapMode.Clamp;
+        var px = new Color32[W * H];
+        float cx = W * 0.5f, cy = H * 0.5f;
+        float rx = (W - 6) * 0.5f, ry = (H - 4) * 0.5f;
+        for (int y = 0; y < H; y++)
+        for (int x = 0; x < W; x++)
+        {
+            float dx = (x - cx) / rx, dy = (y - cy) / ry;
+            float d  = dx * dx + dy * dy;
+            if (d <= 1f)
+            {
+                byte alpha = (byte)(Mathf.Clamp01(1f - d * 0.55f) * 210f);
+                byte r     = (byte)(68 + (x * 3 + y) % 12);
+                px[y * W + x] = new Color32(r, 6, 6, alpha);
+            }
+        }
+        tex.SetPixels32(px);
+        tex.Apply();
+
+        // PNG로 저장 후 임포트
+        var pngBytes = tex.EncodeToPNG();
+        Object.DestroyImmediate(tex);
+        System.IO.File.WriteAllBytes(
+            System.IO.Path.Combine(Application.dataPath, "../", assetPath), pngBytes);
+        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+
+        // 스프라이트 임포트 설정
+        var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType       = TextureImporterType.Sprite;
+            importer.spriteImportMode  = SpriteImportMode.Single;
+            importer.filterMode        = FilterMode.Point;
+            importer.spritePivot       = new Vector2(0.5f, 0.5f);
+            importer.spritePixelsPerUnit = 100f;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
     }
 
     static Sprite LoadFrame0(string assetPath)

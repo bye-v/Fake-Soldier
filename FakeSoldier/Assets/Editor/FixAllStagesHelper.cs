@@ -13,7 +13,7 @@ public static class FixAllStagesHelper
     // fallback (Background 오브젝트를 찾지 못한 경우)
     const float FALLBACK_LEFT_X  = -11.0f;
     const float FALLBACK_RIGHT_X =  11.0f;
-    const float PLAYER_SCALE  =  0.62f;
+    const float PLAYER_SCALE  =  0.80f;
     // PLAYER_X: 왼쪽 벽에서 이 거리만큼 안쪽 (동적 계산)
     const float PLAYER_LEFT_OFFSET = 3.0f;
     const float PLAYER_Y      = -3.15f;
@@ -146,14 +146,26 @@ public static class FixAllStagesHelper
             ApplyBoundaryWalls(parent, leftX, rightX, wallWidth);
         }
 
-        // 대화창 키힌트가 "Space / E" 등 옛 텍스트면 Enter로 교체
+        // UI 힌트 텍스트 크기 및 텍스트 업데이트
         foreach (var root in scene.GetRootGameObjects())
         {
             foreach (var tmp in root.GetComponentsInChildren<TMPro.TMP_Text>(true))
             {
-                if (tmp.name == "KeyHint" && (tmp.text.Contains("Space") || tmp.text.Contains("/ E")))
+                if (tmp.name == "KeyHint")
                 {
-                    tmp.text = "<color=#FFD060>Enter</color>  계속";
+                    // 옛 텍스트 교체
+                    if (tmp.text.Contains("Space") || tmp.text.Contains("/ E"))
+                        tmp.text = "<color=#FFD060>Enter</color>  계속";
+                    tmp.fontSize = 28f;
+                    var rt = tmp.GetComponent<RectTransform>();
+                    if (rt != null) rt.sizeDelta = new Vector2(rt.sizeDelta.x, 38f);
+                    EditorUtility.SetDirty(tmp.gameObject);
+                }
+                else if (tmp.name == "ContinueIndicator")
+                {
+                    tmp.fontSize = 42f;
+                    var rt = tmp.GetComponent<RectTransform>();
+                    if (rt != null) rt.sizeDelta = new Vector2(60f, 60f);
                     EditorUtility.SetDirty(tmp.gameObject);
                 }
             }

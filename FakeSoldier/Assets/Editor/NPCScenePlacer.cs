@@ -13,8 +13,8 @@ public static class NPCScenePlacer
     const string S_CTRL = "Assets/Animations/NPC/NPC_StudentController.controller";
     const string C_CTRL = "Assets/Animations/NPC/NPC_CivilianController.controller";
 
-    const float ZONE_X = 7.0f;
-    const float ZONE_Y = -3.15f;
+    const float ZX = 7.0f;    // EventTriggerZone X
+    const float ZY = -3.15f;  // EventTriggerZone Y
 
     [MenuItem("FakeSoldier/Place NPCs in All Stages")]
     public static void PlaceAll()
@@ -39,17 +39,20 @@ public static class NPCScenePlacer
         public (string spk, string txt)[] lines;
     }
 
-    // ── Stage 01 – 학생 집회 ──────────────────────────────────────
-    // 화살표 지점: 학생들이 몰려있는 시위 현장
-    // → 무언 NPC 3명이 군중처럼 밀집 배치
+    // ════════════════════════════════════════════════════════════════
+    // Stage 01 – 학생 집회 (전남도청 앞)
+    // 화살표 지점: 시위 군중 7명이 빽빽하게 몰려 있는 집회 현장
+    //   · 학생들이 서로 다른 방향을 바라보며 구호를 외치거나 대화 중인 모습
+    //   · 크기·색조를 달리해 각자가 다른 사람임을 표현
+    // ════════════════════════════════════════════════════════════════
     static NPCDef[] BuildStage01() => new[]
     {
-        // ▸ 대화 NPC (왼쪽 2명)
+        // ── 대화 NPC ─────────────────────────────────────
         new NPCDef
         {
-            goName = "NPC_Student_01", displayName = "학생", isStudent = true,
+            goName = "NPC_Student_Sad", displayName = "학생", isStudent = true,
             direction = "SOUTH", pos = new Vector3(-7f, -3.5f, 0), scale = 0.40f,
-            tint = new Color(0.85f, 0.90f, 1.00f),
+            tint = new Color(0.82f, 0.88f, 1.00f),
             lines = new[]
             {
                 ("학생", "어제 친구가 끌려갔어요. 이유도 안 알려줬어요."),
@@ -58,47 +61,87 @@ public static class NPCScenePlacer
         },
         new NPCDef
         {
-            goName = "NPC_Student_02", displayName = "학생", isStudent = true,
+            goName = "NPC_Student_Loud", displayName = "학생", isStudent = true,
             direction = "WEST", pos = new Vector3(-2f, -2.8f, 0), scale = 0.47f,
-            tint = new Color(1.00f, 0.85f, 0.75f),
+            tint = new Color(1.00f, 0.85f, 0.72f),
             lines = new[]
             {
                 ("학생", "계엄령 철폐! 전두환은 물러가라!"),
                 ("학생", "군인이면 나라를 지켜야지, 왜 학생들한테 총부리를 들이밀어요!")
             }
         },
-        // ▸ 화살표 지점 – 시위 군중 3명 밀집 (무언)
+
+        // ── 화살표 지점 – 군중 7명 (무언, 집회 현장) ──────
+        // 중앙 – 구호 외치는 핵심 멤버
         new NPCDef
         {
             goName = "NPC_Crowd_01", displayName = "학생", isStudent = true,
-            direction = "WEST", pos = new Vector3(ZONE_X, ZONE_Y, 0), scale = 0.46f,
-            tint = new Color(1.00f, 0.88f, 0.78f),
+            direction = "WEST", pos = new Vector3(ZX,        ZY,        0), scale = 0.48f,
+            tint = new Color(1.00f, 0.90f, 0.75f),
             lines = System.Array.Empty<(string, string)>()
         },
+        // 좌상단 – 동료를 바라보며 대화 중
         new NPCDef
         {
             goName = "NPC_Crowd_02", displayName = "학생", isStudent = true,
-            direction = "SOUTH", pos = new Vector3(ZONE_X - 0.9f, ZONE_Y + 0.5f, 0), scale = 0.42f,
-            tint = new Color(0.88f, 0.95f, 1.00f),
+            direction = "EAST", pos = new Vector3(ZX - 1.1f, ZY + 0.55f, 0), scale = 0.42f,
+            tint = new Color(0.85f, 0.93f, 1.00f),
             lines = System.Array.Empty<(string, string)>()
         },
+        // 우상단 – 하늘을 향해 구호 외침
         new NPCDef
         {
             goName = "NPC_Crowd_03", displayName = "학생", isStudent = true,
-            direction = "NORTH", pos = new Vector3(ZONE_X + 0.7f, ZONE_Y - 0.4f, 0), scale = 0.38f,
-            tint = new Color(0.95f, 0.88f, 1.00f),
+            direction = "NORTH", pos = new Vector3(ZX + 0.9f, ZY + 0.45f, 0), scale = 0.39f,
+            tint = new Color(1.00f, 0.82f, 0.82f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 좌하단 – 뒤에서 조용히 함께하는 학생
+        new NPCDef
+        {
+            goName = "NPC_Crowd_04", displayName = "학생", isStudent = true,
+            direction = "SOUTH", pos = new Vector3(ZX - 0.7f, ZY - 0.55f, 0), scale = 0.44f,
+            tint = new Color(0.92f, 0.92f, 0.85f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 우하단 – 앉아서 버티는 학생 (작은 스케일)
+        new NPCDef
+        {
+            goName = "NPC_Crowd_05", displayName = "학생", isStudent = true,
+            direction = "SOUTH", pos = new Vector3(ZX + 0.8f, ZY - 0.60f, 0), scale = 0.36f,
+            tint = new Color(0.78f, 0.88f, 0.78f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 오른쪽 끝 – 팔짱 끼고 결의에 찬 학생
+        new NPCDef
+        {
+            goName = "NPC_Crowd_06", displayName = "학생", isStudent = true,
+            direction = "WEST", pos = new Vector3(ZX + 1.5f, ZY - 0.15f, 0), scale = 0.46f,
+            tint = new Color(0.95f, 0.88f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 군중 뒤쪽 상단 – 멀리서 합류한 학생
+        new NPCDef
+        {
+            goName = "NPC_Crowd_07", displayName = "학생", isStudent = true,
+            direction = "SOUTH", pos = new Vector3(ZX + 1.2f, ZY + 0.70f, 0), scale = 0.35f,
+            tint = new Color(0.88f, 0.80f, 1.00f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
 
-    // ── Stage 02 – 민가 수색 (골목) ──────────────────────────────
-    // 화살표 지점: 골목 끝에 홀로 숨어있는 주민 (작은 체구, 겁먹은 자세)
+    // ════════════════════════════════════════════════════════════════
+    // Stage 02 – 민가 수색 (골목)
+    // 화살표 지점: 골목 막다른 끝 – 민가 문 앞에 숨어있는 주민 2명
+    //   · 한 명은 문 뒤에 완전히 숨고 (매우 작은 스케일, 어두운 톤)
+    //   · 다른 한 명은 문틈으로 조심스럽게 바깥을 살피는 모습
+    // ════════════════════════════════════════════════════════════════
     static NPCDef[] BuildStage02() => new[]
     {
-        // ▸ 대화 NPC (2명)
+        // ── 대화 NPC ─────────────────────────────────────
         new NPCDef
         {
-            goName = "NPC_Civilian_01", displayName = "노인", isStudent = false,
+            goName = "NPC_Elder", displayName = "노인", isStudent = false,
             direction = "SOUTH", pos = new Vector3(-7f, -3.2f, 0), scale = 0.52f,
             tint = new Color(0.80f, 0.78f, 0.72f),
             lines = new[]
@@ -109,7 +152,7 @@ public static class NPCScenePlacer
         },
         new NPCDef
         {
-            goName = "NPC_Civilian_02", displayName = "여성", isStudent = false,
+            goName = "NPC_Mother", displayName = "여성", isStudent = false,
             direction = "EAST", pos = new Vector3(0f, -3.8f, 0), scale = 0.42f,
             tint = new Color(1.00f, 0.88f, 0.88f),
             lines = new[]
@@ -118,24 +161,38 @@ public static class NPCScenePlacer
                 ("여성", "제발 빨리 끝내주세요. 이 골목 사람들 아무도 나쁜 사람 없어요.")
             }
         },
-        // ▸ 화살표 지점 – 구석에 몸 숨긴 주민 (작은 스케일, 움츠린 느낌)
+
+        // ── 화살표 지점 – 골목 끝 민가 문 앞 ────────────
+        // 문 뒤에 완전히 숨은 주민 (매우 작고 어두움)
         new NPCDef
         {
-            goName = "NPC_Hiding", displayName = "주민", isStudent = false,
-            direction = "EAST", pos = new Vector3(ZONE_X, ZONE_Y, 0), scale = 0.35f,
-            tint = new Color(0.68f, 0.72f, 0.78f),
+            goName = "NPC_Hiding_Main", displayName = "주민", isStudent = false,
+            direction = "EAST", pos = new Vector3(ZX, ZY, 0), scale = 0.32f,
+            tint = new Color(0.55f, 0.60f, 0.68f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 문틈으로 살짝 엿보는 사람 (조금 더 위, 작음)
+        new NPCDef
+        {
+            goName = "NPC_Hiding_Peek", displayName = "주민", isStudent = false,
+            direction = "WEST", pos = new Vector3(ZX + 0.6f, ZY + 0.55f, 0), scale = 0.35f,
+            tint = new Color(0.62f, 0.65f, 0.72f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
 
-    // ── Stage 03 – 검문소 ─────────────────────────────────────────
-    // 화살표 지점: 검문소 담당자 – 단호하게 길을 막고 서있는 사람
+    // ════════════════════════════════════════════════════════════════
+    // Stage 03 – 검문소
+    // 화살표 지점: 검문소 차단 지점 – 군인 1명 + 보조 요원 1명이 길을 막고 있음
+    //   · 정면 군인: 크고 위압적, 팔을 벌린 자세 (큰 스케일)
+    //   · 보조: 조금 뒤에서 문서 확인하는 모습 (중간 스케일)
+    // ════════════════════════════════════════════════════════════════
     static NPCDef[] BuildStage03() => new[]
     {
-        // ▸ 대화 NPC (2명)
+        // ── 대화 NPC ─────────────────────────────────────
         new NPCDef
         {
-            goName = "NPC_Civilian_01", displayName = "여성", isStudent = false,
+            goName = "NPC_Wife", displayName = "여성", isStudent = false,
             direction = "SOUTH", pos = new Vector3(-6f, -3.6f, 0), scale = 0.42f,
             tint = new Color(1.00f, 0.82f, 0.82f),
             lines = new[]
@@ -146,7 +203,7 @@ public static class NPCScenePlacer
         },
         new NPCDef
         {
-            goName = "NPC_Civilian_02", displayName = "노인", isStudent = false,
+            goName = "NPC_AngerElder", displayName = "노인", isStudent = false,
             direction = "EAST", pos = new Vector3(0f, -2.8f, 0), scale = 0.52f,
             tint = new Color(0.80f, 0.75f, 0.70f),
             lines = new[]
@@ -155,24 +212,39 @@ public static class NPCScenePlacer
                 ("노인", "당신도 어머니가 있지 않소. 그 사람들도 누군가의 자식이에요.")
             }
         },
-        // ▸ 화살표 지점 – 검문 담당자 (크고 단호한 체구, 군복 톤)
+
+        // ── 화살표 지점 – 검문소 차단 ────────────────────
+        // 정면 차단 군인 – 크고 위압적
         new NPCDef
         {
-            goName = "NPC_Checkpoint", displayName = "담당자", isStudent = false,
-            direction = "WEST", pos = new Vector3(ZONE_X, ZONE_Y, 0), scale = 0.55f,
+            goName = "NPC_Guard_Main", displayName = "담당자", isStudent = false,
+            direction = "WEST", pos = new Vector3(ZX, ZY, 0), scale = 0.60f,
+            tint = new Color(0.68f, 0.80f, 0.60f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 보조 요원 – 서류 확인하듯 약간 뒤에
+        new NPCDef
+        {
+            goName = "NPC_Guard_Aide", displayName = "담당자", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(ZX + 0.9f, ZY + 0.4f, 0), scale = 0.46f,
             tint = new Color(0.72f, 0.82f, 0.65f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
 
-    // ── Stage 04 – 도청 진압 (시민군) ────────────────────────────
-    // 화살표 지점: 도청 앞 방어선 – 시민군 2명이 나란히 서서 입구를 지킴
+    // ════════════════════════════════════════════════════════════════
+    // Stage 04 – 도청 진압 (시민군 방어선)
+    // 화살표 지점: 도청 정문 앞 – 시민군 4명이 방어선을 형성
+    //   · 2명은 정면(WEST)을 향해 버티고
+    //   · 1명은 측면을 경계하고
+    //   · 1명은 뒤에서 상황 파악
+    // ════════════════════════════════════════════════════════════════
     static NPCDef[] BuildStage04() => new[]
     {
-        // ▸ 대화 NPC (2명)
+        // ── 대화 NPC ─────────────────────────────────────
         new NPCDef
         {
-            goName = "NPC_Civilian_01", displayName = "시민군", isStudent = false,
+            goName = "NPC_Militia_Father", displayName = "시민군", isStudent = false,
             direction = "EAST", pos = new Vector3(-7f, -3.1f, 0), scale = 0.52f,
             tint = new Color(0.88f, 0.83f, 0.73f),
             lines = new[]
@@ -183,7 +255,7 @@ public static class NPCScenePlacer
         },
         new NPCDef
         {
-            goName = "NPC_Student_01", displayName = "시민군", isStudent = true,
+            goName = "NPC_Militia_Young", displayName = "시민군", isStudent = true,
             direction = "SOUTH", pos = new Vector3(-1f, -3.8f, 0), scale = 0.40f,
             tint = new Color(0.88f, 0.92f, 0.88f),
             lines = new[]
@@ -192,33 +264,56 @@ public static class NPCScenePlacer
                 ("시민군", "이걸 쏜다는 게 상상이 안 가는데, 여기 있는 게 맞는 것 같아요.")
             }
         },
-        // ▸ 화살표 지점 – 도청 입구 방어선 2명 (나란히 서서 입구 사수)
+
+        // ── 화살표 지점 – 도청 정문 방어선 4명 ──────────
+        // 최전방 – 정문을 등지고 정면 응시
         new NPCDef
         {
-            goName = "NPC_Defender_01", displayName = "시민군", isStudent = false,
-            direction = "WEST", pos = new Vector3(ZONE_X, ZONE_Y, 0), scale = 0.50f,
-            tint = new Color(0.82f, 0.85f, 0.70f),
+            goName = "NPC_Defender_Front", displayName = "시민군", isStudent = false,
+            direction = "WEST", pos = new Vector3(ZX, ZY, 0), scale = 0.54f,
+            tint = new Color(0.80f, 0.84f, 0.68f),
             lines = System.Array.Empty<(string, string)>()
         },
+        // 좌측 측면 경계
         new NPCDef
         {
-            goName = "NPC_Defender_02", displayName = "시민군", isStudent = true,
-            direction = "WEST", pos = new Vector3(ZONE_X - 0.8f, ZONE_Y + 0.45f, 0), scale = 0.44f,
-            tint = new Color(0.78f, 0.88f, 0.78f),
+            goName = "NPC_Defender_Left", displayName = "시민군", isStudent = true,
+            direction = "WEST", pos = new Vector3(ZX - 0.9f, ZY + 0.50f, 0), scale = 0.46f,
+            tint = new Color(0.86f, 0.90f, 0.74f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 우측 – 총을 들고 한 발 뒤에 대기
+        new NPCDef
+        {
+            goName = "NPC_Defender_Right", displayName = "시민군", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(ZX + 0.8f, ZY - 0.30f, 0), scale = 0.48f,
+            tint = new Color(0.78f, 0.85f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        // 후방 – 상황 파악하며 뒤를 지킴
+        new NPCDef
+        {
+            goName = "NPC_Defender_Rear", displayName = "시민군", isStudent = true,
+            direction = "EAST", pos = new Vector3(ZX + 1.3f, ZY + 0.55f, 0), scale = 0.40f,
+            tint = new Color(0.84f, 0.88f, 0.78f),
             lines = System.Array.Empty<(string, string)>()
         }
     };
 
-    // ── Stage 05 – 진압 이후 ──────────────────────────────────────
-    // 화살표 지점: 상관 단독 – 냉담하게 서류를 들고 서 있음
+    // ════════════════════════════════════════════════════════════════
+    // Stage 05 – 진압 이후
+    // 화살표 지점: 냉담한 상관 + 뒤에 서있는 부관
+    //   · 상관은 서류를 들고 당당하게 정면 응시 (가장 크고 짙은 색조)
+    //   · 부관은 한 발 뒤에서 묵묵히 서 있음
+    // ════════════════════════════════════════════════════════════════
     static NPCDef[] BuildStage05() => new[]
     {
-        // ▸ 대화 NPC (2명)
+        // ── 대화 NPC ─────────────────────────────────────
         new NPCDef
         {
-            goName = "NPC_Civilian_01", displayName = "부상자", isStudent = false,
+            goName = "NPC_Wounded", displayName = "부상자", isStudent = false,
             direction = "SOUTH", pos = new Vector3(-7f, -3.8f, 0), scale = 0.36f,
-            tint = new Color(0.65f, 0.65f, 0.70f),
+            tint = new Color(0.62f, 0.62f, 0.68f),
             lines = new[]
             {
                 ("부상자", "...고통스러워요."),
@@ -227,30 +322,40 @@ public static class NPCScenePlacer
         },
         new NPCDef
         {
-            goName = "NPC_Student_01", displayName = "생존자", isStudent = true,
+            goName = "NPC_Survivor", displayName = "생존자", isStudent = true,
             direction = "SOUTH", pos = new Vector3(0f, -3.2f, 0), scale = 0.44f,
-            tint = new Color(0.78f, 0.78f, 0.80f),
+            tint = new Color(0.76f, 0.76f, 0.80f),
             lines = new[]
             {
                 ("생존자", "끝났대요. 진압 완료됐대요."),
                 ("생존자", "...근데 이게 끝이면, 지금 이 느낌은 뭔가요.")
             }
         },
-        // ▸ 화살표 지점 – 상관 (서류 들고 냉담히 기다리는 느낌, 크고 당당한 체구)
+
+        // ── 화살표 지점 – 상관 + 부관 ────────────────────
+        // 상관 – 크고 냉담, 서류 들고 기다리는 느낌
         new NPCDef
         {
             goName = "NPC_Officer", displayName = "상관", isStudent = false,
-            direction = "WEST", pos = new Vector3(ZONE_X, ZONE_Y, 0), scale = 0.54f,
-            tint = new Color(0.68f, 0.76f, 0.62f),
+            direction = "WEST", pos = new Vector3(ZX, ZY, 0), scale = 0.58f,
+            tint = new Color(0.65f, 0.75f, 0.58f),
             lines = new[]
             {
                 ("상관", "왜 아직 거기 서 있나. 다 끝났어."),
                 ("상관", "서명 한 장이면 끝이야. 우린 명령을 따른 것뿐이고.")
             }
+        },
+        // 부관 – 상관 뒤에서 묵묵히 서 있음 (무언)
+        new NPCDef
+        {
+            goName = "NPC_Aide", displayName = "부관", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(ZX + 1.0f, ZY + 0.35f, 0), scale = 0.46f,
+            tint = new Color(0.70f, 0.78f, 0.62f),
+            lines = System.Array.Empty<(string, string)>()
         }
     };
 
-    // ── 씬 배치 ──────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════════
     static void SetupStage(string scenePath, NPCDef[] defs)
     {
         var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);

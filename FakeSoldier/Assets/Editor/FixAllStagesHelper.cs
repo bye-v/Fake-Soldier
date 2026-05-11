@@ -171,6 +171,50 @@ public static class FixAllStagesHelper
             }
         }
 
+        // ── Step N: 대화창 UI 스타일 개선 ──
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            if (root.name != "UICanvas") continue;
+            var dialoguePanelTr = root.transform.Find("DialoguePanel");
+            if (dialoguePanelTr != null)
+            {
+                // 패널 배경: 짙은 네이비 (순 검정보다 분위기 있음)
+                var panelImg = dialoguePanelTr.GetComponent<UnityEngine.UI.Image>();
+                if (panelImg != null)
+                {
+                    panelImg.color = new Color(0.04f, 0.04f, 0.12f, 0.93f);
+                    EditorUtility.SetDirty(panelImg.gameObject);
+                }
+
+                // 화자 이름: 황금빛 (빨간색 → 따뜻한 골드)
+                var speakerTr = dialoguePanelTr.Find("SpeakerText");
+                if (speakerTr != null)
+                {
+                    var st = speakerTr.GetComponent<TMPro.TMP_Text>();
+                    if (st != null)
+                    {
+                        st.color    = new Color(0.95f, 0.80f, 0.35f);
+                        st.fontSize = 24f;
+                        EditorUtility.SetDirty(st.gameObject);
+                    }
+                }
+
+                // 본문: 따뜻한 크림색 + 폰트 키우기
+                var bodyTr = dialoguePanelTr.Find("BodyText");
+                if (bodyTr != null)
+                {
+                    var bt = bodyTr.GetComponent<TMPro.TMP_Text>();
+                    if (bt != null)
+                    {
+                        bt.color    = new Color(0.95f, 0.92f, 0.85f);
+                        bt.fontSize = 28f;
+                        EditorUtility.SetDirty(bt.gameObject);
+                    }
+                }
+            }
+            break;
+        }
+
         AddNPCHint(scene);
     }
 

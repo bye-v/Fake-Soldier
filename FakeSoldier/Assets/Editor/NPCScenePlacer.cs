@@ -207,7 +207,7 @@ public static class NPCScenePlacer
         new NPCDef
         {
             goName = "NPC_Child_Hide", displayName = "아이", isStudent = false,
-            direction = "SOUTH", pos = new Vector3(-1.8f, -3.65f, 0), scale = 0.20f,
+            direction = "SOUTH", pos = new Vector3(-1.8f, -3.50f, 0), scale = 0.30f,
             tint = new Color(0.88f, 0.86f, 0.80f),
             lines = System.Array.Empty<(string, string)>()
         },
@@ -378,13 +378,8 @@ public static class NPCScenePlacer
             goName = "NPC_ParkJungKook", displayName = "부상자", isStudent = false,
             direction = "SOUTH", pos = new Vector3(-15f, -3.75f, 0), scale = 0.45f,
             isFallen = true,
-            tint = new Color(0.68f, 0.63f, 0.60f), // 자연스러운 색상 (혈흔 풀로 표현)
-            lines = new[]
-            {
-                ("부상자", "...숨 쉬기가 힘들어요."),
-                ("부상자", "박정국이에요. 서른여덟 살. 애가 둘이에요."),
-                ("부상자", "아내한테... 잘못했다고 전해줄 수 있어요? 오늘 집에 못 간다고.")
-            }
+            tint = new Color(0.68f, 0.63f, 0.60f),
+            lines = System.Array.Empty<(string, string)>() // Stage05Director에서 근접 자동 트리거
         },
         // ── 대화 NPC ②: 생존자 ───────────────────────────────────
         // 시각: 완전히 탈색된 회백색 → 충격과 공황, 넋이 나간 상태
@@ -490,14 +485,18 @@ public static class NPCScenePlacer
         if (def.isFallen)
             AddBloodPool(scene, def.pos, s, sr.sortingOrder);
 
-        var anim = go.AddComponent<Animator>();
-        var ctrl = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
-                       def.isStudent ? S_CTRL : C_CTRL);
-        if (ctrl != null) anim.runtimeAnimatorController = ctrl;
-
         var dirVec = DirectionToVec(def.direction);
-        anim.SetFloat("MoveX", dirVec.x);
-        anim.SetFloat("MoveY", dirVec.y);
+
+        // 쓰러진 NPC는 Animator 불필요 (누운 채 움직이는 것 방지)
+        if (!def.isFallen)
+        {
+            var anim = go.AddComponent<Animator>();
+            var ctrl = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                           def.isStudent ? S_CTRL : C_CTRL);
+            if (ctrl != null) anim.runtimeAnimatorController = ctrl;
+            anim.SetFloat("MoveX", dirVec.x);
+            anim.SetFloat("MoveY", dirVec.y);
+        }
 
         bool hasDialogue = def.lines != null && def.lines.Length > 0;
 
@@ -526,7 +525,7 @@ public static class NPCScenePlacer
         var poolGO = new GameObject("BloodPool");
         SceneManager.MoveGameObjectToScene(poolGO, scene);
         poolGO.transform.position   = new Vector3(pos.x, pos.y - 0.05f, 0f);
-        poolGO.transform.localScale = new Vector3(npcScale * 2.4f, npcScale * 1.0f, 1f);
+        poolGO.transform.localScale = new Vector3(npcScale * 5.0f, npcScale * 2.5f, 1f);
         var psr = poolGO.AddComponent<SpriteRenderer>();
         psr.sprite      = CreateBloodPoolSprite();
         psr.sortingOrder = baseSortOrder - 1;

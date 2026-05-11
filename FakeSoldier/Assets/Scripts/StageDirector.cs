@@ -46,6 +46,12 @@ public abstract class StageDirector : MonoBehaviour
 
     protected IEnumerator Wait(float seconds) { yield return new WaitForSeconds(seconds); }
 
+    // 플레이어가 특정 X 좌표에 도달(혹은 지나칠 때)까지 대기
+    protected IEnumerator WaitUntilPlayerNear(float worldX, float threshold = 2f)
+    {
+        yield return new WaitUntil(() => player != null && player.transform.position.x >= worldX - threshold);
+    }
+
     protected void AllowMove() { if (player) player.SetCanMove(true); }
     protected void LockMove()  { if (player) player.SetCanMove(false); }
 

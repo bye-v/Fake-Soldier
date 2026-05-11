@@ -151,7 +151,7 @@ MonoBehaviour:
   creditContent: {fileID: 1848371375}
   scrollSpeed: 60
   skipButton: {fileID: 1399542664}
-  creditBGM: {fileID: 8300000, guid: 2b71504769245d846b1b7791de18fe5d, type: 3}
+  creditBGM: {fileID: 8300000, guid: 4549e2c302251db449f793738e624b2b, type: 3}
 --- !u!4 &1120508991
 Transform:
   m_ObjectHideFlags: 0
@@ -535,7 +535,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fadeImage: {fileID: 1777543634}
+  titleLabel: {fileID: 0}
   fadeDuration: 0.5
+  titleFadeDuration: 0.4
 --- !u!114 &1777543634
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1105,7 +1107,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0

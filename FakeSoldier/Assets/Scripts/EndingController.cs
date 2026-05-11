@@ -39,9 +39,17 @@ public class EndingController : MonoBehaviour
         if (endingBGM != null && AudioManager.Instance != null)
             AudioManager.Instance.PlayBGMOnce(endingBGM);
 
-        string body = BuildUI();
+        // 텍스트 영역 높이 확장 + 자동 폰트 크기 조정
+        if (bodyText)
+        {
+            var rt = bodyText.GetComponent<UnityEngine.RectTransform>();
+            if (rt) rt.sizeDelta = new Vector2(rt.sizeDelta.x, 380f);
+            bodyText.enableAutoSizing = true;
+            bodyText.fontSizeMin = 16f;
+            bodyText.fontSizeMax = 28f;
+        }
 
-        if (bodyText) bodyText.text = "";
+        string body = BuildUI();
         StartCoroutine(TypeBodyText(body));
 
         creditButton?.onClick.AddListener(() => SceneManager.LoadScene("Credit"));
@@ -106,13 +114,22 @@ public class EndingController : MonoBehaviour
     {
         if (!bodyText) { typingDone = true; yield break; }
 
-        bodyText.text = "";
-        foreach (char c in text)
+        // 전체 텍스트를 먼저 설정해 TMP가 폰트 크기와 레이아웃을 계산하게 함
+        bodyText.text = text;
+        bodyText.maxVisibleCharacters = 0;
+
+        // 한 프레임 대기 후 TMP 텍스트 정보 확정
+        yield return null;
+        int total = bodyText.textInfo.characterCount;
+
+        for (int i = 0; i <= total; i++)
         {
-            if (skipTyping) { bodyText.text = text; break; }
-            bodyText.text += c;
+            if (skipTyping) { bodyText.maxVisibleCharacters = total; break; }
+            bodyText.maxVisibleCharacters = i;
             yield return new WaitForSeconds(typeSpeed);
         }
+
+        bodyText.maxVisibleCharacters = total;
         typingDone = true;
 
         // True 엔딩: 타이핑 완료 후 7초 뒤 자동으로 크레딧으로 전환

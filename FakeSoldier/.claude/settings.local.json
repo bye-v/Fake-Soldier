@@ -34,7 +34,9 @@
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\FakeSoldier\\\\FakeSoldier\\\\Assets\\\\Sprites\\\\Player\\\\SMS_Soldier_SOUTH_strip4.png\"\\); Write-Host \"SMS Soldier: $\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\); $img2 = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\FakeSoldier\\\\FakeSoldier\\\\Assets\\\\Sprites\\\\NPC\\\\NPC_Student_SOUTH_strip4.png\"\\); Write-Host \"NPC Student: $\\($img2.Width\\) x $\\($img2.Height\\)\"; $img2.Dispose\\(\\))",
       "mcp__UnityMCP__script_apply_edits",
       "mcp__UnityMCP__delete_script",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep -n \"--- !u!224.*\\\\|m_Name: VictimCount\" Assets/Scenes/Ending_Bad.unity)",
+      "Bash(grep *)"
     ]
   },
   "enableAllProjectMcpServers": true,

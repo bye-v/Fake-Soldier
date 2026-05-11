@@ -13,6 +13,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] float voiceVolume = 1.0f;
 
     Coroutine voiceStopCoroutine;
+    Coroutine voiceFadeCoroutine;
 
     void Awake()
     {
@@ -45,8 +46,10 @@ public class AudioManager : MonoBehaviour
     public void PlayBGMOnce(AudioClip clip, float fadeTime = 0.5f)
     {
         if (clip == null) return;
-        bgmSource.loop = false;
-        PlayBGM(clip, fadeTime);
+        if (bgmSource.clip == clip && bgmSource.isPlaying) return;
+        bgmSource.loop = false;  // PlayBGM을 거치지 않아야 loop=true 덮어씌움을 방지
+        StopAllCoroutines();
+        StartCoroutine(CrossFadeBGM(clip, fadeTime));
     }
 
     public void StopBGM(float fadeTime = 0.5f)
@@ -66,25 +69,29 @@ public class AudioManager : MonoBehaviour
     public void PlayVoice(AudioClip clip, float maxDuration = 2f)
     {
         if (clip == null) return;
-        if (voiceStopCoroutine != null) StopCoroutine(voiceStopCoroutine);
+        // 진행 중인 페이드 코루틴까지 모두 취소 후 볼륨 즉시 복원
+        if (voiceStopCoroutine != null) { StopCoroutine(voiceStopCoroutine); voiceStopCoroutine = null; }
+        if (voiceFadeCoroutine != null) { StopCoroutine(voiceFadeCoroutine); voiceFadeCoroutine = null; }
         voiceSource.volume = voiceVolume;
-        voiceSource.PlayOneShot(clip, 3f); // 3× scale로 음량 증폭
+        voiceSource.PlayOneShot(clip, 3f);
         voiceStopCoroutine = StartCoroutine(FadeOutVoiceAfter(maxDuration));
     }
 
     public void StopVoice()
     {
         if (voiceStopCoroutine != null) { StopCoroutine(voiceStopCoroutine); voiceStopCoroutine = null; }
-        StartCoroutine(FadeVoiceTo(0f, 0.08f, true));
+        if (voiceFadeCoroutine != null) { StopCoroutine(voiceFadeCoroutine); voiceFadeCoroutine = null; }
+        // volume=0으로 fade 후 복원 없음 — 다음 PlayVoice가 volume을 직접 설정
+        voiceFadeCoroutine = StartCoroutine(FadeVoiceTo(0f, 0.08f));
     }
 
     IEnumerator FadeOutVoiceAfter(float delay)
     {
         yield return new WaitForSeconds(delay);
-        yield return FadeVoiceTo(0f, 0.12f, true);
+        yield return FadeVoiceTo(0f, 0.12f);
     }
 
-    IEnumerator FadeVoiceTo(float targetVol, float duration, bool restoreAfter)
+    IEnumerator FadeVoiceTo(float targetVol, float duration)
     {
         float start = voiceSource.volume;
         float t = 0f;
@@ -95,11 +102,6 @@ public class AudioManager : MonoBehaviour
             yield return null;
         }
         voiceSource.volume = targetVol;
-        if (restoreAfter)
-        {
-            yield return null;
-            voiceSource.volume = voiceVolume;
-        }
     }
 
     public void SetBGMVolume(float v)

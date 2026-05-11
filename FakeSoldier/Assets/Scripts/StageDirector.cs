@@ -23,9 +23,12 @@ public abstract class StageDirector : MonoBehaviour
 
     protected IEnumerator PlayDialogue(IEnumerable<DialogueLine> lines)
     {
+        bool wasMovable = player != null && player.CanMove;
+        LockMove();
         bool done = false;
         DialogueManager.Instance.StartDialogue(lines, () => done = true);
         yield return new WaitUntil(() => done);
+        if (wasMovable) AllowMove();
     }
 
     protected IEnumerator ShowChoice(ChoiceData[] choices, System.Action<int> onResult, float timer = 0f)

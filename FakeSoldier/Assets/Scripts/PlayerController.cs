@@ -45,5 +45,6 @@ public class PlayerController : MonoBehaviour
         animator.SetBool(HashMoving, moveInput != Vector2.zero);
     }
 
+    public bool CanMove => canMove;
     public void SetCanMove(bool value) => canMove = value;
 }

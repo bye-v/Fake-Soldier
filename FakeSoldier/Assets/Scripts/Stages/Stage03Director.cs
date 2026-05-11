@@ -5,16 +5,19 @@ public class Stage03Director : StageDirector
 {
     protected override IEnumerator RunStage()
     {
+        yield return ShowStageTitle("1980년 5월 20일\n교차로 검문소");
+
         yield return PlayDialogue(new[]
         {
-            new DialogueLine { speaker = "상관",   text = "교차로 전부 봉쇄한다. 통행증 없는 자는 예외 없이 연행해!" },
+            new DialogueLine { speaker = "상관",    text = "교차로 전부 봉쇄한다. 통행증 없는 자는 예외 없이 연행해!" },
             new DialogueLine { speaker = "나 (속)", text = "길을 막으면 병원도 못 간다. 지금 이 순간에도 총에 맞은 사람들이 피를 흘리고 있을 텐데." },
+            new DialogueLine { speaker = "나 (속)", text = "어제 그 골목의 아이 얼굴이 자꾸 떠오른다." },
         });
 
         AllowMove();
         yield return PlayDialogue(new[]
         {
-            new DialogueLine { speaker = "",       text = "[ 검문소로 이동하시오. ]" },
+            new DialogueLine { speaker = "", text = "[ 검문소로 이동하시오. ]" },
         });
 
         yield return WaitForEventZone();
@@ -22,10 +25,17 @@ public class Stage03Director : StageDirector
 
         yield return PlayDialogue(new[]
         {
-            new DialogueLine { speaker = "여성",   text = "제발요! 남편이 총에 맞았어요! 지금 당장 병원에 가야 해요!" },
-            new DialogueLine { speaker = "상관",   text = "통행증 없으면 안 돼. 규정대로 연행해." },
-            new DialogueLine { speaker = "여성",   text = "죽어요! 지금 죽어가고 있다고요! 제발...!" },
+            new DialogueLine { speaker = "여성",    text = "제발요! 남편이 총에 맞았어요! 지금 당장 병원에 가야 해요!" },
+            new DialogueLine { speaker = "상관",    text = "통행증 없으면 안 돼. 규정대로 연행해." },
+        });
+
+        ShakeCamera(0.45f, 0.13f);
+
+        yield return PlayDialogue(new[]
+        {
+            new DialogueLine { speaker = "여성",    text = "죽어요! 지금 죽어가고 있다고요! 제발...!" },
             new DialogueLine { speaker = "나 (속)", text = "남자의 셔츠가 붉게 물들어 있다. 의식이 없다. 이 사람은 지금 죽어가고 있어." },
+            new DialogueLine { speaker = "나 (속)", text = "통행증. 고작 종이 한 장이 이 사람의 목숨보다 무거운가." },
         });
 
         yield return ShowChoice(new[]

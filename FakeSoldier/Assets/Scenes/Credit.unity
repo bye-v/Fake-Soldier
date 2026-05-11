@@ -151,6 +151,7 @@ MonoBehaviour:
   creditContent: {fileID: 1848371375}
   scrollSpeed: 60
   skipButton: {fileID: 1399542664}
+  creditBGM: {fileID: 8300000, guid: 2b71504769245d846b1b7791de18fe5d, type: 3}
 --- !u!4 &1120508991
 Transform:
   m_ObjectHideFlags: 0

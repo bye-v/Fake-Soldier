@@ -11,7 +11,7 @@ public abstract class StageDirector : MonoBehaviour
 
     protected virtual void Start()
     {
-        player = FindFirstObjectByType<PlayerController>();
+        player    = FindFirstObjectByType<PlayerController>();
         eventZone = FindFirstObjectByType<EventTriggerZone>();
         if (player) player.SetCanMove(false);
         if (stageBGM != null && AudioManager.Instance != null)
@@ -35,7 +35,6 @@ public abstract class StageDirector : MonoBehaviour
         yield return new WaitUntil(() => chosen >= 0);
     }
 
-    // 플레이어가 EventTriggerZone에 진입할 때까지 대기
     protected IEnumerator WaitForEventZone()
     {
         if (eventZone == null) { yield return new WaitForSeconds(2f); yield break; }
@@ -46,10 +45,23 @@ public abstract class StageDirector : MonoBehaviour
 
     protected IEnumerator Wait(float seconds) { yield return new WaitForSeconds(seconds); }
 
-    // 플레이어가 특정 X 좌표에 도달(혹은 지나칠 때)까지 대기
     protected IEnumerator WaitUntilPlayerNear(float worldX, float threshold = 2f)
     {
         yield return new WaitUntil(() => player != null && player.transform.position.x >= worldX - threshold);
+    }
+
+    // 날짜·장소 타이틀 카드를 화면에 잠깐 표시
+    protected IEnumerator ShowStageTitle(string title, float holdTime = 1.8f)
+    {
+        if (SceneFader.Instance != null)
+            yield return SceneFader.Instance.ShowTitle(title, holdTime);
+    }
+
+    // 카메라 흔들기
+    protected void ShakeCamera(float duration = 0.35f, float magnitude = 0.15f)
+    {
+        if (CameraFollow.Instance != null)
+            CameraFollow.Instance.Shake(duration, magnitude);
     }
 
     protected void AllowMove() { if (player) player.SetCanMove(true); }

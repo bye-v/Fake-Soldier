@@ -25,17 +25,22 @@ public class ChoiceSystem : MonoBehaviour
     [Header("Settings")]
     [SerializeField] Color highlightColor = Color.yellow;
     [SerializeField] Color normalColor    = Color.white;
+    [SerializeField] AudioClip clickSFX;
+    [SerializeField] AudioClip hoverSFX;
 
     ChoiceData[] currentChoices;
     Action<int> onChosen;
     int selectedIndex = 0;
     bool active;
 
+    // 선택지가 열린 직후 입력 무시 (대화창 클릭과의 충돌 방지)
+    float shownTime;
+    const float inputDelay = 0.18f;
+
     float timeLeft;
     bool hasTimer;
     Coroutine timerCoroutine;
 
-    // 양심 확인 상태
     bool awaitingConfirm;
     int  confirmTargetIdx;
     ChoiceData[] originalChoices;
@@ -46,7 +51,6 @@ public class ChoiceSystem : MonoBehaviour
         new ChoiceData { text = "아니오, 다시 생각해보겠습니다." },
     };
 
-    // 스테이지별/맥락별 양심 메시지 목록
     static readonly string[] s_GuiltMessages = new[]
     {
         "정말로 그러하시겠습니까?",
@@ -67,6 +71,8 @@ public class ChoiceSystem : MonoBehaviour
     void Update()
     {
         if (!active) return;
+        // 선택지가 열린 직후 짧은 시간 동안 입력 무시
+        if (Time.time - shownTime < inputDelay) return;
 
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             SetSelected((selectedIndex - 1 + currentChoices.Length) % currentChoices.Length);
@@ -78,15 +84,16 @@ public class ChoiceSystem : MonoBehaviour
 
     public void Show(ChoiceData[] choices, Action<int> callback, float countdown = 0f)
     {
-        currentChoices = choices;
-        onChosen       = callback;
-        selectedIndex  = 0;
-        active         = true;
+        currentChoices  = choices;
+        onChosen        = callback;
+        selectedIndex   = 0;
+        active          = true;
         awaitingConfirm = false;
+        shownTime       = Time.time;
         choicePanel.SetActive(true);
 
         RefreshButtons(choices);
-        SetSelected(0);
+        SetSelected(0, false);
 
         hasTimer = countdown > 0;
         if (timerText) timerText.gameObject.SetActive(hasTimer);
@@ -107,7 +114,7 @@ public class ChoiceSystem : MonoBehaviour
         }
     }
 
-    void SetSelected(int idx)
+    void SetSelected(int idx, bool playSound = true)
     {
         for (int i = 0; i < choiceButtons.Length; i++)
         {
@@ -120,6 +127,8 @@ public class ChoiceSystem : MonoBehaviour
             if (i < choiceTexts.Length && choiceTexts[i])
                 choiceTexts[i].color = sel ? new Color(1f, 0.92f, 0.3f) : Color.white;
         }
+        if (playSound && idx != selectedIndex && hoverSFX != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlaySFX(hoverSFX);
         selectedIndex = idx;
     }
 
@@ -127,12 +136,10 @@ public class ChoiceSystem : MonoBehaviour
     {
         if (!active) return;
 
-        // ── 양심 확인 모드 응답 ──
         if (awaitingConfirm)
         {
             if (idx == 0)
             {
-                // "예" → 원래 선택 강행
                 awaitingConfirm = false;
                 currentChoices  = originalChoices;
                 HideGuiltMessage();
@@ -140,7 +147,6 @@ public class ChoiceSystem : MonoBehaviour
             }
             else
             {
-                // "아니오" → 원래 선택지로 복귀
                 awaitingConfirm = false;
                 currentChoices  = originalChoices;
                 HideGuiltMessage();
@@ -150,7 +156,6 @@ public class ChoiceSystem : MonoBehaviour
             return;
         }
 
-        // ── 부정적 선택 → 양심 확인 발동 ──
         if (currentChoices[idx].scoreChange < 0)
         {
             ShowGuiltConfirm(idx);
@@ -162,24 +167,26 @@ public class ChoiceSystem : MonoBehaviour
 
     void ShowGuiltConfirm(int idx)
     {
-        awaitingConfirm   = true;
-        confirmTargetIdx  = idx;
-        originalChoices   = currentChoices;
-        currentChoices    = s_ConfirmChoices;
+        awaitingConfirm  = true;
+        confirmTargetIdx = idx;
+        originalChoices  = currentChoices;
+        currentChoices   = s_ConfirmChoices;
+        shownTime        = Time.time; // 양심 팝업 열릴 때도 딜레이 초기화
 
-        // timerText를 양심 메시지 표시용으로 전용
         if (timerText)
         {
             timerText.gameObject.SetActive(true);
-            timerText.text      = s_GuiltMessages[guiltMsgIndex % s_GuiltMessages.Length];
-            timerText.color     = new Color(1f, 0.78f, 0.78f, 1f);
-            timerText.fontSize  = 26f;
-            timerText.alignment = TextAlignmentOptions.Center;
+            timerText.text               = s_GuiltMessages[guiltMsgIndex % s_GuiltMessages.Length];
+            timerText.color              = new Color(1f, 0.78f, 0.78f, 1f);
+            timerText.fontSize           = 22f;
+            timerText.alignment          = TextAlignmentOptions.Center;
+            timerText.enableWordWrapping = false;
+            timerText.overflowMode       = TextOverflowModes.Overflow;
             guiltMsgIndex++;
         }
 
         RefreshButtons(s_ConfirmChoices);
-        SetSelected(1);  // 기본값: "아니오, 다시 생각해보겠습니다."
+        SetSelected(1, false);
     }
 
     void HideGuiltMessage()
@@ -195,11 +202,55 @@ public class ChoiceSystem : MonoBehaviour
         if (timerText) timerText.gameObject.SetActive(false);
         choicePanel.SetActive(false);
 
+        if (clickSFX != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlaySFX(clickSFX);
+
         var choice = currentChoices[idx];
         GameManager.Instance.AddScore(choice.scoreChange);
         if (choice.isFiringRefusal) GameManager.Instance.SetFiringRefused();
 
+        if (choice.scoreChange != 0)
+            StartCoroutine(ShowScoreFeedback(choice.scoreChange));
+
         onChosen?.Invoke(idx);
+    }
+
+    IEnumerator ShowScoreFeedback(int scoreChange)
+    {
+        var canvas = choicePanel.GetComponentInParent<Canvas>();
+        if (!canvas) yield break;
+
+        var go = new GameObject("ScoreFeedback");
+        go.transform.SetParent(canvas.transform, false);
+
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.42f);
+        rt.sizeDelta = new Vector2(400f, 80f);
+        rt.anchoredPosition = Vector2.zero;
+
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        bool positive = scoreChange > 0;
+        tmp.text      = positive ? "양심 +" + scoreChange : "양심 " + scoreChange;
+        tmp.fontSize  = 38f;
+        tmp.color     = positive ? new Color(0.45f, 1f, 0.55f) : new Color(1f, 0.35f, 0.35f);
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.fontStyle = FontStyles.Bold;
+
+        float duration = 1.6f;
+        float elapsed  = 0f;
+        var   startPos = rt.anchoredPosition;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            rt.anchoredPosition = startPos + new Vector2(0f, t * 110f);
+            var c = tmp.color;
+            c.a = Mathf.Lerp(1f, 0f, t);
+            tmp.color = c;
+            yield return null;
+        }
+        Destroy(go);
     }
 
     IEnumerator RunTimer(float duration)

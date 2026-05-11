@@ -7,6 +7,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] Button startButton;
     [SerializeField] Button quitButton;
     [SerializeField] AudioClip menuBGM;
+    [SerializeField] AudioClip clickSFX;
 
     void Start()
     {
@@ -18,8 +19,11 @@ public class MainMenuController : MonoBehaviour
             AudioManager.Instance.PlayBGM(menuBGM);
     }
 
+    void PlayClick() { if (clickSFX && AudioManager.Instance) AudioManager.Instance.PlaySFX(clickSFX); }
+
     void OnStart()
     {
+        PlayClick();
         if (SceneFader.Instance != null)
             SceneFader.Instance.FadeToScene("Stage_01");
         else
@@ -28,6 +32,7 @@ public class MainMenuController : MonoBehaviour
 
     void OnQuit()
     {
+        PlayClick();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else

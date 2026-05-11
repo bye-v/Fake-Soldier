@@ -9,9 +9,13 @@ public class CreditController : MonoBehaviour
     [SerializeField] RectTransform creditContent;
     [SerializeField] float scrollSpeed = 60f;
     [SerializeField] Button skipButton;
+    [SerializeField] AudioClip creditBGM;
 
     void Start()
     {
+        if (creditBGM != null && AudioManager.Instance != null)
+            AudioManager.Instance.PlayBGMOnce(creditBGM);
+
         skipButton?.onClick.AddListener(GoTitle);
         StartCoroutine(ScrollCredits());
     }

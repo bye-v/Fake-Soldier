@@ -203,7 +203,7 @@ public static class NPCScenePlacer
             tint = new Color(0.58f, 0.62f, 0.70f),
             lines = System.Array.Empty<(string, string)>()
         },
-        // ── 추가: 어머니 곁에 웅크린 아이 ("이불 속에서 안 나와요" 언급) ─
+        // ── 추가: 어머니 곁에 웅크린 아이 ─────────────────────────
         new NPCDef
         {
             goName = "NPC_Child_Hide", displayName = "아이", isStudent = false,
@@ -211,8 +211,57 @@ public static class NPCScenePlacer
             tint = new Color(0.88f, 0.86f, 0.80f),
             lines = System.Array.Empty<(string, string)>()
         },
-        // ── 추가: 골목 안쪽에 웅크린 노인 ───────────────────────────
-        new NPCDef
+        // ── 골목 전체 배경 군중 ─────────────────────────────────────
+        new NPCDef // 골목 입구쪽 겁먹은 남성 주민
+        {
+            goName = "NPC_Bg_Man1", displayName = "주민", isStudent = false,
+            direction = "EAST", pos = new Vector3(-19f, -3.5f, 0), scale = 0.45f,
+            tint = new Color(0.68f, 0.65f, 0.60f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 벽에 등 붙이고 서있는 여성
+        {
+            goName = "NPC_Bg_Woman1", displayName = "주민", isStudent = false,
+            direction = "WEST", pos = new Vector3(-17f, -3.2f, 0), scale = 0.40f,
+            tint = new Color(0.80f, 0.72f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 문 옆에 웅크린 노인
+        {
+            goName = "NPC_Bg_Elder1", displayName = "주민", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(-13f, -3.6f, 0), scale = 0.43f,
+            tint = new Color(0.72f, 0.68f, 0.60f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 골목 중간 — 불안하게 서성이는 중년 남성
+        {
+            goName = "NPC_Bg_Man2", displayName = "주민", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(-7f, -3.4f, 0), scale = 0.47f,
+            tint = new Color(0.74f, 0.70f, 0.64f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 뒤쪽 멀리 — 창문 밖 내다보는 주민 (작게)
+        {
+            goName = "NPC_Bg_Watcher", displayName = "주민", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(4f, -2.9f, 0), scale = 0.34f,
+            tint = new Color(0.62f, 0.60f, 0.58f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 골목 안쪽 — 서로 부둥켜안은 노부부 (여성)
+        {
+            goName = "NPC_Bg_OldWoman", displayName = "주민", isStudent = false,
+            direction = "EAST", pos = new Vector3(8f, -3.5f, 0), scale = 0.38f,
+            tint = new Color(0.75f, 0.70f, 0.65f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 노부부 (남성)
+        {
+            goName = "NPC_Bg_OldMan", displayName = "주민", isStudent = false,
+            direction = "WEST", pos = new Vector3(9f, -3.3f, 0), scale = 0.44f,
+            tint = new Color(0.70f, 0.66f, 0.60f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 골목 끝 안쪽에 웅크린 주민 (가장 작고 어둠)
         {
             goName = "NPC_Elder_Hiding", displayName = "주민", isStudent = false,
             direction = "EAST", pos = new Vector3(-9f, -3.3f, 0), scale = 0.46f,
@@ -353,6 +402,71 @@ public static class NPCScenePlacer
             direction = "SOUTH", pos = new Vector3(ZX + 0.7f, ZY + 0.65f, 0), scale = 0.42f,
             isFallen = true, rotZ = -65f,
             tint = new Color(0.70f, 0.65f, 0.60f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+
+        // ── 광장 전체 배경 시민군/군중 ─────────────────────────────
+        new NPCDef // 분수대 왼쪽 — 긴장하며 서있는 시민군
+        {
+            goName = "NPC_Bg_Militia1", displayName = "시민군", isStudent = false,
+            direction = "WEST", pos = new Vector3(-5f, -3.2f, 0), scale = 0.48f,
+            tint = new Color(0.80f, 0.86f, 0.68f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 분수대 앞 — 무릎 꿇고 총 겨누는 자세 (작은 scale)
+        {
+            goName = "NPC_Bg_Militia2", displayName = "시민군", isStudent = true,
+            direction = "WEST", pos = new Vector3(-3f, -3.7f, 0), scale = 0.38f,
+            tint = new Color(0.84f, 0.90f, 0.72f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 분수대 오른쪽 — 뒤를 경계하는 시민군
+        {
+            goName = "NPC_Bg_Militia3", displayName = "시민군", isStudent = false,
+            direction = "EAST", pos = new Vector3(2f, -3.3f, 0), scale = 0.50f,
+            tint = new Color(0.78f, 0.84f, 0.65f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 중앙 광장 — 홀로 서있는 시민군, 결의에 찬 표정
+        {
+            goName = "NPC_Bg_Militia4", displayName = "시민군", isStudent = true,
+            direction = "SOUTH", pos = new Vector3(6f, -3.0f, 0), scale = 0.45f,
+            tint = new Color(0.82f, 0.88f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 왼쪽 입구 — 방금 합류한 듯한 청년
+        {
+            goName = "NPC_Bg_Militia5", displayName = "시민군", isStudent = true,
+            direction = "EAST", pos = new Vector3(-10f, -3.5f, 0), scale = 0.42f,
+            tint = new Color(0.86f, 0.92f, 0.74f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 왼쪽 뒤쪽 — 쪼그리고 앉아 숨죽이는 시민군 (작게)
+        {
+            goName = "NPC_Bg_Militia6", displayName = "시민군", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(-12f, -3.8f, 0), scale = 0.35f,
+            tint = new Color(0.76f, 0.82f, 0.63f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 오른쪽 후방 — 서로 귓속말하는 시민군 (첫번째)
+        {
+            goName = "NPC_Bg_Whisper1", displayName = "시민군", isStudent = false,
+            direction = "WEST", pos = new Vector3(9f, -3.4f, 0), scale = 0.44f,
+            tint = new Color(0.80f, 0.85f, 0.67f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 오른쪽 후방 — 귓속말 (두번째)
+        {
+            goName = "NPC_Bg_Whisper2", displayName = "시민군", isStudent = true,
+            direction = "EAST", pos = new Vector3(10f, -3.2f, 0), scale = 0.40f,
+            tint = new Color(0.84f, 0.90f, 0.70f),
+            lines = System.Array.Empty<(string, string)>()
+        },
+        new NPCDef // 광장 중앙 후방 — 멀리서 지켜보는 시민군 (가장 작게)
+        {
+            goName = "NPC_Bg_Distant", displayName = "시민군", isStudent = false,
+            direction = "SOUTH", pos = new Vector3(4f, -2.7f, 0), scale = 0.32f,
+            tint = new Color(0.75f, 0.80f, 0.62f),
             lines = System.Array.Empty<(string, string)>()
         }
     };

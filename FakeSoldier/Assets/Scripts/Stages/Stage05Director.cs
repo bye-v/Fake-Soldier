@@ -5,6 +5,8 @@ public class Stage05Director : StageDirector
 {
     protected override IEnumerator RunStage()
     {
+        yield return ShowStageTitle("1980년 5월 27일\n전남도청 — 새벽");
+
         // ── 오프닝 독백: 진압 직후의 침묵 ──
         yield return PlayDialogue(new[]
         {

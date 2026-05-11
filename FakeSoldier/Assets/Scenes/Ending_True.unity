@@ -241,7 +241,8 @@ MonoBehaviour:
   endingText: 
   victimCountText: {fileID: 0}
   victimCount: 166
-  endingBGM: {fileID: 0}
+  endingBGM: {fileID: 8300000, guid: 33480ee70a99ca54c935851cc020b5da, type: 3}
+  typeSpeed: 0.045
 --- !u!4 &686479399
 Transform:
   m_ObjectHideFlags: 0
@@ -1248,7 +1249,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fadeImage: {fileID: 1757967405}
+  titleLabel: {fileID: 0}
   fadeDuration: 0.5
+  titleFadeDuration: 0.4
 --- !u!114 &1757967405
 MonoBehaviour:
   m_ObjectHideFlags: 0
